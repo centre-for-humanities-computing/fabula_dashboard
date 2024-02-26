@@ -8,7 +8,7 @@ file = open('data/temp.txt','r')
 
 df = td.extract_metrics(text=file, spacy_model="en_core_web_lg", metrics=["readability", "coherence"])
 
-df.to_csv('data/temp.csv')
+#df.to_csv('data/temp.csv')
 
 app = Dash(__name__)
 
@@ -24,8 +24,8 @@ app.layout = html.Div(
             figure={
                 "data": [
                     {
-                        "x": df["readability"],
-                        "y": df["coherence"],
+                        "x": df["lix"],
+                        "y": df["n_tokens"],
                         "type": "lines",
                     },
                 ],
@@ -36,4 +36,5 @@ app.layout = html.Div(
 )
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    # app.run_server(debug=True)
+    app.run(debug=True)
