@@ -4,3 +4,7 @@
 
 # virtual environment
 fab_net
+
+# data file
+data/CHICAGO_MEASURES_FEB24.xlsx
+data/mean.csv
