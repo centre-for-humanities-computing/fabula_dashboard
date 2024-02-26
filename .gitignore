@@ -4,3 +4,7 @@
 
 # virtual environment
 fab_net
+env
+
+# git setup file
+git_setup.sh
