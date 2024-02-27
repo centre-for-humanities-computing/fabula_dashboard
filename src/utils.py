@@ -1,5 +1,6 @@
 ### Code copied from: https://github.com/centre-for-humanities-computing/fabula_pipeline/blob/main/src/utils.py
 import re
+import pandas as pd
 import numpy as np
 from collections import Counter
 import spacy
@@ -35,6 +36,72 @@ def get_nlp(lang: str):
             ) from e
 
     return nlp
+
+
+def get_spacy_attributes(token):
+    # Save all token attributes in a list
+    token_attributes = [
+        token.i,
+        token.text,
+        token.lemma_,
+        token.is_punct,
+        token.is_stop,
+        token.morph,
+        token.pos_,
+        token.tag_,
+        token.dep_,
+        token.head,
+        token.head.i,
+        token.ent_type_,
+    ]
+
+    return token_attributes
+
+
+def create_spacy_df(doc_attributes: list) -> pd.DataFrame:
+    df_attributes = pd.DataFrame(
+        doc_attributes,
+        columns=[
+            "token_i",
+            "token_text",
+            "token_lemma_",
+            "token_is_punct",
+            "token_is_stop",
+            "token_morph",
+            "token_pos_",
+            "token_tag_",
+            "token_dep_",
+            "token_head",
+            "token_head_i",
+            "token_ent_type_",
+        ],
+    )
+    return df_attributes
+
+
+def filter_spacy_df(df: pd.DataFrame) -> pd.DataFrame:
+    spacy_pos = ["NOUN", "VERB", "ADJ", "INTJ"]
+
+    filtered_df = df.loc[
+        (df["token_is_punct"] == False)
+        & (df["token_is_stop"] == False)
+        & (df["token_pos_"].isin(spacy_pos))
+    ]
+
+    filtered_df["token_roget_pos_"] = filtered_df["token_pos_"].map(
+        {"NOUN": "N", "VERB": "V", "ADJ": "ADJ", "INTJ": "INT"}
+    )
+    return filtered_df
+
+
+def get_token_categories(df: pd.DataFrame) -> str:
+    token_categories = df.apply(
+        lambda row: roget.categories(str(row["token_lemma_"]), row["token_roget_pos_"]),
+        axis=1,
+    ).to_string()
+
+    return token_categories
+
 
 
 def avg_wordlen(words: list[str]) -> float:
@@ -250,3 +317,16 @@ def text_readability(text: str):
     dale_chall_new = textstat.dale_chall_readability_score_v2(text)
 
     return flesch_grade, flesch_ease, smog, ari, dale_chall_new
+
+
+def make_dico(lexicon: list) -> dict:
+    tabs = [line.split("\t") for line in lexicon]
+
+    words = [word[0] for word in tabs if len(tabs) > 1]
+    counts = [word[1:] for word in tabs if len(tabs) > 1]
+
+    dico = {}
+    for i, word in enumerate(words):
+        dico[word] = counts[i]
+
+    return dico

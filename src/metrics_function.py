@@ -1,18 +1,21 @@
+import json
 import nltk
 from nltk.tokenize import sent_tokenize, word_tokenize
+from nltk.stem.wordnet import WordNetLemmatizer
 from lexical_diversity import lex_div as ld
 import neurokit2 as nk
 
 from utils import *
 
 
-def compute_metrics(text: str) -> dict:
+def compute_metrics(text:str, lang:str, sentiment_method:str) -> dict:
 
-    # determine language
-    lang = "XXX"
+    # download nltk resources
+    nltk.download("punkt")
+    nltk.download("wordnet")
 
-    # determine sentiment method
-    sentiment_method = "XXX"
+    # create lemmatizer
+    lmtzr = WordNetLemmatizer()
 
     # load spacy model according to language
     nlp = get_nlp(lang)
@@ -24,6 +27,14 @@ def compute_metrics(text: str) -> dict:
     # prepare text and tokens
     sents = sent_tokenize(text, language=lang)
     words = word_tokenize(text, language=lang)
+
+    # spacy
+    spacy_attributes = []
+    for token in nlp(text):
+        token_attributes = get_spacy_attributes(token)
+        spacy_attributes.append(token_attributes)
+
+    spacy_df = create_spacy_df(spacy_attributes)
 
     # stylometrics
     ## for words
@@ -94,10 +105,10 @@ def compute_metrics(text: str) -> dict:
         except:
             print("error in readability\n")
 
-        # concreteness and VAD - NOT ADAPTED YET
-        diconc = json.load("concreteness_dict.json")
+        # concreteness and VAD
+        diconc = json.load("data/concreteness_dict.json")
 
-        with open("NRC-VAD-Lexicon.txt", "r") as f:
+        with open("NRC-VAD-Lexicon.txt", "r") as f: # not in fabula_pipeline repo?
             lexicon = f.readlines()
 
         dico = make_dico(lexicon)
@@ -117,9 +128,29 @@ def compute_metrics(text: str) -> dict:
                     aro.append([dico[lem][1]])
                     dom.append([dico[lem][2]])
 
-        temp["concreteness"] = conc
-        temp["valence"] = val
-        temp["arousal"] = aro
-        temp["dominance"] = dom
+        output["concreteness"] = conc
+        output["valence"] = val
+        output["arousal"] = aro
+        output["dominance"] = dom
 
+        # roget
+        all_roget_categories = roget.list_all_categories()
 
+        roget_df = filter_spacy_df(spacy_df)
+
+        output["roget_n_tokens"] = len(spacy_df)
+        output["roget_n_tokens_filtered"] = len(roget_df)
+
+        token_categories = get_token_categories(roget_df)
+        doc_categories = re.findall(r"(rog\d{3} \w*)", token_categories)
+
+        for roget_cat in all_roget_categories:
+            output[roget_cat] = doc_categories.count(roget_cat)
+
+        output["roget_n_cats"] = len(doc_categories)
+
+        # save arc
+        output["arc"] = arc
+
+        # return the metrics
+        return output
