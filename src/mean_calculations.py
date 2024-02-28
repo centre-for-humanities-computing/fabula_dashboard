@@ -13,5 +13,7 @@ mean = df[numerical_columns].mean()
 mean_df = pd.DataFrame(mean, columns=['Mean'])
 # transpose the dataframe
 mean_df = mean_df.T
+mean_df.pop('BOOK_ID', 'LIBRARIES', 'WRITTEN_AS', 'PUBL_DATE', 'PULITZER', 'NBA', )
+
 # save the mean dataframe to a csv file
 mean_df.to_csv('data/mean.csv')
