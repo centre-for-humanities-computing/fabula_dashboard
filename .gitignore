@@ -12,3 +12,12 @@ git_setup.sh
 # data file
 data/CHICAGO_MEASURES_FEB24.xlsx
 data/mean.csv
+data/NRC-VAD-Lexicon.txt
+
+# python cache
+__pycache__/
+*.pyc
+
+# functions from fabulanet 
+src/saffine/
+src/roget/

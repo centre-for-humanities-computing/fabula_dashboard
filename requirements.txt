@@ -12,3 +12,5 @@ requests>=2.31.0
 spacy>=3.6.1
 textstat>=0.7.3
 tqdm
+rpy2
+lxml
