@@ -13,6 +13,7 @@ git_setup.sh
 data/CHICAGO_MEASURES_FEB24.xlsx
 data/mean.csv
 data/NRC-VAD-Lexicon.txt
+data/concreteness_dict.json
 
 # python cache
 __pycache__/
