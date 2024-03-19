@@ -61,6 +61,8 @@ def compute_metrics(text:str, lang:str, sentiment_method:str) -> dict:
     try:
         output["bigram_entropy"], output["word_entropy"] = text_entropy(text, language=lang, base=2, asprob=False)
     except:
+        print(text[:10])
+        print(lang)
         print("error in bigram and/or word entropy\n")
 
     # setting up sentiment analyzer

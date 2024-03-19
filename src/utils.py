@@ -13,6 +13,7 @@ import rpy2.robjects.packages as rpackages
 import saffine.multi_detrending as md
 import roget.roget as roget
 import textstat
+from math import log
 
 def get_nlp(lang: str):
     """
@@ -87,6 +88,8 @@ def filter_spacy_df(df: pd.DataFrame) -> pd.DataFrame:
         & (df["token_is_stop"] == False)
         & (df["token_pos_"].isin(spacy_pos))
     ]
+
+    filtered_df = filtered_df.copy()
 
     filtered_df["token_roget_pos_"] = filtered_df["token_pos_"].map(
         {"NOUN": "N", "VERB": "V", "ADJ": "ADJ", "INTJ": "INT"}
@@ -190,6 +193,10 @@ def text_entropy(text: str, language: str, base=2, asprob=True, clean=True):
 
         return bigram_entropy / total_len, word_entropy / total_len
 
+def cal_entropy(base, log_n, transform_prob):
+    entropy = sum([-x * (log(x, base) - log_n) for x in transform_prob.values()])
+    return entropy
+
 def prepare_syuzhet():
     # import R's utility package
     utils = rpackages.importr("utils")
@@ -291,6 +298,8 @@ def get_basic_sentarc_features(arc: list[float]):
         diff_end_rest,
     )
 
+def integrate(x: list[float]) -> np.matrix:
+    return np.mat(np.cumsum(x) - np.mean(x))
 
 def get_hurst(arc: list[float]):
     y = integrate(arc)

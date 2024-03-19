@@ -1,2 +1,25 @@
-- Metric 1: this is an explanation of metric 1
-- Metric 2: this is an explanation of metric 2
+#### **word_count**: Number of words in the text (int).
+#### **average_wordlen**: The average length of all words in the text (float).
+#### **msttr**: Mean Segmental Type-Token Ratio is a measure of lexical richness. It segments the text in segments of a given size (here 100 words, often taken as standard) and calculates the Type-Token Ratio for each segment - then takes the average of all segment ratios of the whole text (float).
+#### **average_sentlen**: The average length of sentences measured in characters (float).
+#### **gzipr**: gzip compression ratio (float).
+#### **bzipr**: Compressibility of the text-files as calculated by dividing the original bitsize of the text with the compressed bitzsize (using bzip2 compression). We calculated the compression ratio (original bit-size/compressed bit-size) for the first 1500 sentences of each text (float).
+#### **bigram_entropy**: Bigram Entropy (float).
+#### **flesch_grade**: FA revised version of the Flesch Reading Ease score. Like the former, it is based on the average sentence length (ASL), and the number of syllables per word (ASW). It also weighs word length more than sentence length, but the weight is smaller compared to that in the Flesch Reading Ease Score. It returns a US grade level (Crossley et al., 2011). The formula is: Flesch Kincaid Grade Level =(0.39 * sentence length) + (11.8 * word length) -15.59. Why it was selected It’s also one of the most common and traditional scores to assess readability. What to be aware of See Flesch Reading Ease above The score was initially developed for document for the US Navy, so it might be questioned how well it applies to literature (float).
+#### **mean_sentiment**: The mean of the sentiment given by the sentiment analysis method chosen (float).
+#### **std_sentiment**: Standard deviation of sentiment scores (float)
+#### **mean_sentiment_per_segment**: mean sentiment for each segment (arc divided into 20 segments) (list)
+#### **mean_sentiment_first_ten_percent**: mean sentiment for first 10% (float).
+#### **mean_sentiment_last_ten_percent**: mean sentiment for last 10% (float).
+#### **difference_lastten_therest**: difference in sentiment between last 10% and the rest of the sentiment arc (float).
+#### **approximate_entropy**: Approximate Entropy (list).
+#### **hurst**: Hurst (float).
+#### **flesch_ease**: A measure of readability based on the average sentence length (ASL), and the average syllables per word (word length)(ASW), with a higher weight on the word length (Crossley et al., 2011). It should be noted that the weight on word lengths is higher in the Flesch Reading Ease score compared to the Flesch-Kincaid Grade Level. It returns a readability score between 0 and 100, where higher scores are better (Hartley, 2016). The formula is: Flesch Reading Ease =206.835 - (1.015 * sentence length) + (84.6 * word length). Why it was selected It’s one of the most common scores and has in several publications been argued to be the best measure compared to other readability scores (see Hartley, 2016) It does not return a US grade (compared to all other scores), which might be a bit difficult to interpret, but instead returns a score. What to be aware of (also described in Hartley, 2016) The score might be outdated and has several issues, which also apply to other readability scores (Hartley, 2016): Many syllables does not mean that a word is more difficult to understand The meaning of words is not taken into account There are individual differences between readers (float).
+#### **smog**: Smog is a readability score (float).
+#### **ari**: Ari is a readability score (float).
+#### **dale_chall_new**: Dale Chall New is a readability score (float).
+#### **arc**: (list)
+#### **concreteness**: The mean concreteness for the text based on the Brysbaert et al concreteness dictionary. Concreteness was extracted at the word level, then the mean of the sentence was found, and then the mean of the sentence-level scores, which amounted to the mean concreteness for the whole book. (list)
+#### **valence**: The mean valence of the text based on the NRC_VAD_lexicon. Valence was extracted at the word level, and then the mean of each sentence was found, followed by the mean for the whole book, which is the number saved here. (list)
+#### **dominance**: The mean dominance of the text. (list)
+#### **arousal**: The mean arousal of the text. Same as mean_val, just an arousal score instead. (list)

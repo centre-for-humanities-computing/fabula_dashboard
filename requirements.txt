@@ -14,3 +14,4 @@ textstat>=0.7.3
 tqdm
 rpy2
 lxml
+dash_bootstrap_components

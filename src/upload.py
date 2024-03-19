@@ -1,4 +1,5 @@
 from dash import Dash, dcc, html, dash_table, Input, Output, State, callback
+import dash_bootstrap_components as dbc
 
 import base64
 import datetime
@@ -14,8 +15,8 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 mean_df = pd.read_csv('data/mean.csv')
 
 # read in explanation file
-#explanation_text = open('data/metrics_explanation.txt','r')
-explanation_text = "this is a text"
+with open('data/metrics_explanation.txt', 'r') as file:
+            explanation_text = file.read()
 
 app = Dash(__name__, external_stylesheets=external_stylesheets)
 
@@ -25,22 +26,27 @@ app.layout = html.Div(
         dcc.Dropdown(options={'english': 'English', 'danish': 'Danish'}, id='lang-dropdown', placeholder="Select a lagnguage"),
         html.H1(children='Sentiment Analysis to use'),
         dcc.Dropdown(['afinn', 'vader', 'syuzhet', 'avg_syuzhet_vader'], id='sent-dropdown', placeholder="Select sentiment analysis method"),
-        html.Div([html.Div(dcc.Upload(id='upload-data', children=html.Div(['Drag and Drop or ', html.A('Select Files')]), style={'width': '100%','height': '120px', 'lineHeight': '120px','borderWidth': '1px','borderStyle': 'dashed','borderRadius': '5px','textAlign': 'center','margin': '10px'},multiple=True), style={'display': 'inline-block'}),
-                  html.Div(dcc.Textarea(id='textarea-example',value=None,style={'width': '100%', 'height': 100}), style={'display': 'inline-block'})]),
+        dcc.Upload(id='upload-data', children=html.Div(['Drag and Drop or ', html.A('Select Files')]), style={'width': '100%','height': '120px', 'lineHeight': '120px','borderWidth': '1px','borderStyle': 'dashed','borderRadius': '5px','textAlign': 'center','margin': '10px'},multiple=True),
+        dcc.Textarea(id='textarea-example',value=None,style={'width': '100%', 'height': '120px', 'textAlign': 'center','margin': '10px'}),
         html.Button('Submit', id='submit-val', n_clicks=0),
         html.Div(id='output-data-upload'),
         html.H2(children='Explanation of Metrics'),
-        html.P(children=explanation_text),
+        dcc.Markdown(explanation_text),
     ]
 )
-
-# app.layout = html.Div([
-#     dcc.Dropdown(['NYC', 'MTL', 'SF'], 'NYC', id='demo-dropdown'),
-#     html.Div(id='dd-output-container')
-# ])
+ 
 
 def parse_contents(contents, filename, date, language, sentiment, text):
     
+
+    if language is None:
+        print(Exception)
+        return html.Div(['Choose langauge'], style = {'color': 'red', 'fontSize': 50, 'textAlign': 'center', 'margin': '10px'})
+    
+    if sentiment is None:
+        print(Exception)
+        return html.Div(['Choose sentiment'], style = {'color': 'red', 'fontSize': 50, 'textAlign': 'center', 'margin': '10px'})
+
     if filename is not None:
         # if contents == ...:
         content_type, content_string = contents.split(',')
@@ -48,11 +54,7 @@ def parse_contents(contents, filename, date, language, sentiment, text):
         decoded = base64.b64decode(content_string)
         try:
             if 'txt' in filename:
-                # Assume that the user uploaded a CSV file
                 full_string = decoded.decode('utf-8')
-            # elif 'xls' in filename:
-            #     # Assume that the user uploaded an excel file
-            #     df = pd.read_excel(io.BytesIO(decoded))
         except Exception as e:
             print(e)
             return html.Div([
@@ -61,56 +63,31 @@ def parse_contents(contents, filename, date, language, sentiment, text):
         
     if filename is None:
         full_string = contents
-        
-    # elif text == ...:
-    #     full_string == text
-
-    # else:
-    #     print(e)
-    #     return html.Div([
-    #         'There was an error processing this file.'
-    #     ])
-    
-    # create pandas dataframe that calculates string length and number of white spaces of string
-    # only use first 20 characters of the string
-    df = pd.DataFrame({'String': full_string[:20]}, index = [0])
-    df['Name'] = filename
-    df['Length'] = df['String'].apply(len)
-    df['WhiteSpaces'] = df['String'].apply(lambda x: len(x) - len(x.replace(' ', '')))
-    df['Language'] = language
-
-    # sentiment analysis
-    if sentiment == 'afinn':
-        #df['Sentiment'] = df['String'].apply(lambda x: afinn.score(x))
-        df['Sentiment'] = sentiment
-    elif sentiment == 'vader':
-        #df['Sentiment'] = df['String'].apply(lambda x: vader.polarity_scores(x))
-        df['Sentiment'] = sentiment
-    elif sentiment == 'syuzhet':
-        #df['Sentiment'] = df['String'].apply(lambda x: syuzhet.get_sentiment(x))
-        df['Sentiment'] = sentiment
-    elif sentiment == 'avg_syuzhet_vader':
-        #df['Sentiment'] = df['String'].apply(lambda x: (syuzhet.get_sentiment(x) + vader.polarity_scores(x)['compound'])/2)
-        df['Sentiment'] = sentiment
 
     dict_0 = compute_metrics(full_string, language, sentiment)
+    print("Done with computing metrics")
 
     # compute metrics is producing lists in its dict, and don't know what to do with them
-    del dict_0['concreteness'] # temporary fix
-    del dict_0['valence'] # temporary fix
-    del dict_0['arousal'] # temporary fix
-    del dict_0['dominance'] # temporary fix
-    del dict_0['arc'] # temporary fix
+    dict_1 = {k: [v] for k, v in dict_0.items() if k not in ['concreteness', 'valence', 'arousal', 'dominance', 'arc', 'mean_sentiment_per_segment', 'approximate_entropy']}
 
-    df = pd.DataFrame(dict_0, index = [0])
+    # print(dict_0)
+    df = pd.DataFrame(dict_1, index = ["values"])
+    for col in df.columns:
+        if df[col].dtype == 'int64':
+            df[col] = df[col].astype(float)
+
+    common_columns = df.columns.intersection(mean_df.columns)
+    df = pd.merge(df, mean_df[common_columns], how='outer')
+    column_names_row = pd.DataFrame([df.columns], columns=df.columns)
+    new_df = pd.concat([column_names_row, df], ignore_index=True)
+    df = new_df.T
+    df.columns = ['Metric', 'Value', 'Mean']
 
     return html.Div([
-        #html.H5(filename),
-        #html.H6(datetime.datetime.fromtimestamp(date)),
 
         html.Hr(),  # horizontal line
 
-        html.P(children=(full_string)),
+        html.P(children=(full_string[:500])),
 
         html.Hr(),  # horizontal line
 
@@ -120,20 +97,27 @@ def parse_contents(contents, filename, date, language, sentiment, text):
 
         dash_table.DataTable(
             df.to_dict('records'),
-            [{'name': i, 'id': i} for i in df.columns]
+            [{'name': i, 'id': i} for i in df.columns],
+            style_cell={'textAlign': 'left'},
+            style_data={
+                 'color': 'black',
+                'backgroundColor': 'white'
+            },
+            style_data_conditional=[
+                 {
+                      'if': {'row_index': 'odd'},
+                      'backgroundColor': 'rgb(220, 220, 220)',
+                      }
+                      ],
+            style_header={
+                 'backgroundColor': 'rgb(210, 210, 210)',
+                 'color': 'black',
+                 'fontWeight': 'bold'
+                 }
         ),
 
         html.Hr(),  # horizontal line
 
-        # dcc.Graph(
-        #     figure={
-        #         "data": [
-        #             {"y": df["Length"], "type": "bar", "name": filename},
-        #             {"y": mean_df["TITLE_LENGTH"], "type": "bar", "name": filename},
-        #         ],
-        #         "layout": {"title": "Average Price of Avocados"},
-        #     },
-        # ),
     ])
 
 @callback(Output('output-data-upload', 'children'),
