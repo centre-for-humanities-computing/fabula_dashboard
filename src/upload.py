@@ -6,6 +6,8 @@ import datetime
 import io
 
 import pandas as pd
+from statistics import mean 
+from statistics import stdev
 
 from metrics_function import *
 
@@ -68,20 +70,37 @@ def parse_contents(contents, filename, date, language, sentiment, text):
     print("Done with computing metrics")
 
     # compute metrics is producing lists in its dict, and don't know what to do with them
+    # so I'm just going to take the mean of all the lists and put them in the dict
+    dict_0['concreteness_mean'] = mean([i[0] for i in dict_0['concreteness']])
+    dict_0['concreteness_sd'] = stdev([i[0] for i in dict_0['concreteness']])
+    dict_0['valence_mean'] = mean([float(i[0]) for i in dict_0['valence']])
+    dict_0['valence_sd'] = stdev([float(i[0]) for i in dict_0['valence']])
+    dict_0['arousal_mean'] = mean([float(i[0]) for i in dict_0['arousal']])
+    dict_0['arousal_sd'] = stdev([float(i[0]) for i in dict_0['arousal']])
+    dict_0['dominance_mean'] = mean([float(i[0][:-3]) for i in dict_0['dominance']])
+    dict_0['dominance_sd'] = stdev([float(i[0][:-3]) for i in dict_0['dominance']])
+    dict_0['arc_mean'] = mean(dict_0['arc'])
+    dict_0['arc_sd'] = stdev(dict_0['arc'])
+    if 'mean_sentiment_per_segment' in dict_0:
+        dict_0['mean_sentiment_per_segment_mean'] = mean(dict_0['mean_sentiment_per_segment'])
+        dict_0['mean_sentiment_per_segment_sd'] = stdev(dict_0['mean_sentiment_per_segment'])
+    if 'approximate_entropy' in dict_0:
+        dict_0['approximate_entropy_value'] = dict_0['approximate_entropy'][0]
+
     dict_1 = {k: [v] for k, v in dict_0.items() if k not in ['concreteness', 'valence', 'arousal', 'dominance', 'arc', 'mean_sentiment_per_segment', 'approximate_entropy']}
 
-    # print(dict_0)
-    df = pd.DataFrame(dict_1, index = ["values"])
+    df = pd.DataFrame(dict_1)
     for col in df.columns:
         if df[col].dtype == 'int64':
             df[col] = df[col].astype(float)
 
-    common_columns = df.columns.intersection(mean_df.columns)
-    df = pd.merge(df, mean_df[common_columns], how='outer')
     column_names_row = pd.DataFrame([df.columns], columns=df.columns)
-    new_df = pd.concat([column_names_row, df], ignore_index=True)
-    df = new_df.T
-    df.columns = ['Metric', 'Value', 'Mean']
+    column_names_row = column_names_row.T
+    common_columns = df.columns.intersection(mean_df.columns)
+    mean_df_common = mean_df[common_columns].T
+    df = df.T
+    concat_df = pd.concat([column_names_row, df, mean_df_common], ignore_index=True, axis = 1)
+    concat_df.columns = ['Metric', 'Value', 'Mean']
 
     return html.Div([
 
@@ -96,8 +115,8 @@ def parse_contents(contents, filename, date, language, sentiment, text):
         html.Hr(),  # horizontal line
 
         dash_table.DataTable(
-            df.to_dict('records'),
-            [{'name': i, 'id': i} for i in df.columns],
+            concat_df.to_dict('records'),
+            [{'name': i, 'id': i} for i in concat_df.columns],
             style_cell={'textAlign': 'left'},
             style_data={
                  'color': 'black',

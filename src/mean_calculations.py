@@ -2,6 +2,7 @@
 
 # read in the file
 import pandas as pd
+from statistics import mean
 df = pd.read_excel('data/CHICAGO_MEASURES_FEB24.xlsx')
 
 # calculate the mean of the columns with numerical data
@@ -9,14 +10,27 @@ df = pd.read_excel('data/CHICAGO_MEASURES_FEB24.xlsx')
 #numerical_columns = df.select_dtypes(include=['float64', 'int64']).columns
 # calculate the mean of the columns with numerical data
 #mean = df[numerical_columns].mean()
-df_subset = df.loc[:,['TITLE_LENGTH', 'HURST', 'WORDCOUNT', 
+
+# calculate mean of 'arc_segments_means' column
+print(type(df['ARC_SEGMENTS_MEANS'][0]))
+def mean_float(l):
+   # if list just contains '', return empty list
+   l = l.strip('][').split(', ')
+   if l == ['']:
+       return float('NaN')
+   l = [float(i) for i in l]
+   return sum(l) / len(l)
+
+df['arc_mean'] = df['ARC_SEGMENTS_MEANS'].map(mean_float)
+
+df_subset = df.loc[:,['TITLE_LENGTH', 'HURST', 'APPENT', 'WORDCOUNT', 
                        'SENTENCE_LENGTH', 'BZIP_NEW', 'MSTTR-100', 
                        'BZIP_TXT', 'READABILITY_FLESCH_GRADE', 
                        'READABILITY_FLESCH_EASE', 'READABILITY_SMOG',
                        'READABILITY_ARI', 'READABILITY_DALE_CHALL_NEW',
                        'MEAN_SENT', 'STD_SENT', 'END_SENT',
                        'BEGINNING_SENT', 'DIFFERENCE_ENDING_TO_MEAN', 
-                    #    'ARC_SEGMENTS_MEANS',
+                     #   'ARC_SEGMENTS_MEANS',
                        'SPACY_ADJ', 'SPACY_NOUN',
                        'SPACY_VERB','SPACY_ADV', 'SPACY_PRON',
                        'SPACY_PUNCT', 'SPACY_STOPS', 'SPACY_SBJ', 'SPACY_PASSIVE',
@@ -34,17 +48,17 @@ df_subset = df.loc[:,['TITLE_LENGTH', 'HURST', 'WORDCOUNT',
                        'self_model_ppl','gpt2_ppl','gpt2-xl_ppl','VERB_NOUN_RATIO',
                        'ADV_VERB_RATIO','PERC_ACTIVE_VERBS','PASSIVE_ACTIVE_RATIO',
                        'NOMINAL_VERB_RATIO','APPENT_SYUZHET','mean_con','mean_val',
-                       'mean_aro','mean_dom','std_con','std_val','std_aro','std_dom']]
+                       'mean_aro','mean_dom','std_con','std_val','std_aro','std_dom', 'arc_mean']]
 
 # change column names to be more descriptive
 
-df_subset.columns = ['TITLE_LENGTH', 'HURST', 'word_count', 
-                       'SENTENCE_LENGTH', 'BZIP_NEW', 'MSTTR-100', 
+df_subset.columns = ['TITLE_LENGTH', 'hurst','approximate_entropy_value', 'word_count', 
+                       'average_sentlen', 'bzipr', 'msttr', 
                        'BZIP_TXT', 'flesch_grade', 
                        'flesch_ease', 'smog',
                        'ari', 'dale_chall_new',
-                       'MEAN_SENT', 'STD_SENT', 'END_SENT',
-                       'BEGINNING_SENT', 'DIFFERENCE_ENDING_TO_MEAN', 
+                       'mean_sentiment', 'std_sentiment', 'mean_sentiment_last_ten_percent',
+                       'mean_sentiment_first_ten_percent', 'difference_lastten_therest', 
                     #    'ARC_SEGMENTS_MEANS',
                        'SPACY_ADJ', 'SPACY_NOUN',
                        'SPACY_VERB','SPACY_ADV', 'SPACY_PRON',
@@ -62,8 +76,10 @@ df_subset.columns = ['TITLE_LENGTH', 'HURST', 'word_count',
                        'HURST_SYUZHET','TTR_VERB','TTR_NOUN','FREQ_OF','FREQ_THAT',
                        'self_model_ppl','gpt2_ppl','gpt2-xl_ppl','VERB_NOUN_RATIO',
                        'ADV_VERB_RATIO','PERC_ACTIVE_VERBS','PASSIVE_ACTIVE_RATIO',
-                       'NOMINAL_VERB_RATIO','APPENT_SYUZHET','mean_con','mean_val',
-                       'mean_aro','mean_dom','std_con','std_val','std_aro','std_dom']
+                       'NOMINAL_VERB_RATIO','APPENT_SYUZHET','concreteness_mean','valence_mean',
+                       'arousal_mean','dominance_mean','concreteness_sd','valence_sd','arousal_sd','dominance_sd', 'arc_mean']
+
+
 
 mean = df_subset.mean()
 # save the mean to a new dataframe with the old column names and one row wth the mean

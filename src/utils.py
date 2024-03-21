@@ -10,6 +10,7 @@ from nltk.tokenize import word_tokenize
 from afinn import Afinn
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import rpy2.robjects.packages as rpackages
+from rpy2.robjects import conversion, default_converter
 import saffine.multi_detrending as md
 import roget.roget as roget
 import textstat
@@ -199,16 +200,17 @@ def cal_entropy(base, log_n, transform_prob):
 
 def prepare_syuzhet():
     # import R's utility package
-    utils = rpackages.importr("utils")
+    with conversion.localconverter(default_converter):
+        utils = rpackages.importr("utils")
 
-    # select a mirror for R packages
-    utils.chooseCRANmirror(ind=1)  # select the first mirror in the list
+        # select a mirror for R packages
+        utils.chooseCRANmirror(ind=1)  # select the first mirror in the list
 
-    # install the package if is not already installed
-    if not rpackages.isinstalled("syuzhet"):
-        utils.install_packages("syuzhet")
+        # install the package if is not already installed
+        if not rpackages.isinstalled("syuzhet"):
+            utils.install_packages("syuzhet")
 
-    return None
+        return None
 
 def get_sentarc(sents: list[str], sent_method: str, lang: str) -> list[float]:
     """
@@ -235,12 +237,12 @@ def get_sentarc(sents: list[str], sent_method: str, lang: str) -> list[float]:
 
     if "syuzhet" in sent_method:
         prepare_syuzhet()
+        with conversion.localconverter(default_converter):
+            syuzhet = rpackages.importr("syuzhet")
+            syuzhet_arc = list(syuzhet.get_sentiment(sents, method="syuzhet"))
 
-        syuzhet = rpackages.importr("syuzhet")
-        syuzhet_arc = list(syuzhet.get_sentiment(sents, method="syuzhet"))
-
-        if "avg" not in sent_method:
-            return syuzhet_arc
+            if "avg" not in sent_method:
+                return syuzhet_arc
 
     if "avg" in sent_method:
         sent_array = np.array([vader_arc, syuzhet_arc])
