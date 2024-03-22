@@ -80,7 +80,8 @@ def parse_contents(contents, filename, date, language, sentiment, text):
     dict_0['dominance_mean'] = mean([float(i[0][:-3]) for i in dict_0['dominance']])
     dict_0['dominance_sd'] = stdev([float(i[0][:-3]) for i in dict_0['dominance']])
     dict_0['arc_mean'] = mean(dict_0['arc'])
-    dict_0['arc_sd'] = stdev(dict_0['arc'])
+    if len(dict_0['arc']) > 1:
+        dict_0['arc_sd'] = stdev(dict_0['arc'])
     if 'mean_sentiment_per_segment' in dict_0:
         dict_0['mean_sentiment_per_segment_mean'] = mean(dict_0['mean_sentiment_per_segment'])
         dict_0['mean_sentiment_per_segment_sd'] = stdev(dict_0['mean_sentiment_per_segment'])
