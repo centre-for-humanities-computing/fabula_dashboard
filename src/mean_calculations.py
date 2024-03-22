@@ -3,6 +3,7 @@
 # read in the file
 import pandas as pd
 from statistics import mean
+from statistics import stdev
 df = pd.read_excel('data/CHICAGO_MEASURES_FEB24.xlsx')
 
 # calculate the mean of the columns with numerical data
@@ -12,7 +13,6 @@ df = pd.read_excel('data/CHICAGO_MEASURES_FEB24.xlsx')
 #mean = df[numerical_columns].mean()
 
 # calculate mean of 'arc_segments_means' column
-print(type(df['ARC_SEGMENTS_MEANS'][0]))
 def mean_float(l):
    # if list just contains '', return empty list
    l = l.strip('][').split(', ')
@@ -21,7 +21,16 @@ def mean_float(l):
    l = [float(i) for i in l]
    return sum(l) / len(l)
 
+def sd_float(l):
+   # if list just contains '', return empty list
+   l = l.strip('][').split(', ')
+   if l == ['']:
+       return float('NaN')
+   l = [float(i) for i in l]
+   return stdev(l)
+
 df['arc_mean'] = df['ARC_SEGMENTS_MEANS'].map(mean_float)
+df['arc_sd'] = df['ARC_SEGMENTS_MEANS'].map(sd_float)
 
 df_subset = df.loc[:,['TITLE_LENGTH', 'HURST', 'APPENT', 'WORDCOUNT', 
                        'SENTENCE_LENGTH', 'BZIP_NEW', 'MSTTR-100', 
@@ -48,7 +57,7 @@ df_subset = df.loc[:,['TITLE_LENGTH', 'HURST', 'APPENT', 'WORDCOUNT',
                        'self_model_ppl','gpt2_ppl','gpt2-xl_ppl','VERB_NOUN_RATIO',
                        'ADV_VERB_RATIO','PERC_ACTIVE_VERBS','PASSIVE_ACTIVE_RATIO',
                        'NOMINAL_VERB_RATIO','APPENT_SYUZHET','mean_con','mean_val',
-                       'mean_aro','mean_dom','std_con','std_val','std_aro','std_dom', 'arc_mean']]
+                       'mean_aro','mean_dom','std_con','std_val','std_aro','std_dom', 'arc_mean', 'arc_sd']]
 
 # change column names to be more descriptive
 
@@ -77,7 +86,7 @@ df_subset.columns = ['TITLE_LENGTH', 'hurst','approximate_entropy_value', 'word_
                        'self_model_ppl','gpt2_ppl','gpt2-xl_ppl','VERB_NOUN_RATIO',
                        'ADV_VERB_RATIO','PERC_ACTIVE_VERBS','PASSIVE_ACTIVE_RATIO',
                        'NOMINAL_VERB_RATIO','APPENT_SYUZHET','concreteness_mean','valence_mean',
-                       'arousal_mean','dominance_mean','concreteness_sd','valence_sd','arousal_sd','dominance_sd', 'arc_mean']
+                       'arousal_mean','dominance_mean','concreteness_sd','valence_sd','arousal_sd','dominance_sd', 'arc_mean', 'arc_sd']
 
 
 

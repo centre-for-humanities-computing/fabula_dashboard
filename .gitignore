@@ -23,5 +23,3 @@ __pycache__/
 # functions from fabulanet 
 src/saffine/
 src/roget/
-
-remove_file.sh

@@ -167,8 +167,8 @@ def compute_metrics(text:str, lang:str, sentiment_method:str) -> dict:
 
         output["roget_n_cats"] = len(doc_categories)
 
-        # save arc
-        output["arc"] = arc
+    # save arc
+    output["arc"] = arc
 
-        # return the metrics
-        return output
+    # return the metrics
+    return output

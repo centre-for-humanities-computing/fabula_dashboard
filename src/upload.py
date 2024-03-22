@@ -71,17 +71,21 @@ def parse_contents(contents, filename, date, language, sentiment, text):
 
     # compute metrics is producing lists in its dict, and don't know what to do with them
     # so I'm just going to take the mean of all the lists and put them in the dict
-    dict_0['concreteness_mean'] = mean([i[0] for i in dict_0['concreteness']])
-    dict_0['concreteness_sd'] = stdev([i[0] for i in dict_0['concreteness']])
-    dict_0['valence_mean'] = mean([float(i[0]) for i in dict_0['valence']])
-    dict_0['valence_sd'] = stdev([float(i[0]) for i in dict_0['valence']])
-    dict_0['arousal_mean'] = mean([float(i[0]) for i in dict_0['arousal']])
-    dict_0['arousal_sd'] = stdev([float(i[0]) for i in dict_0['arousal']])
-    dict_0['dominance_mean'] = mean([float(i[0][:-3]) for i in dict_0['dominance']])
-    dict_0['dominance_sd'] = stdev([float(i[0][:-3]) for i in dict_0['dominance']])
-    dict_0['arc_mean'] = mean(dict_0['arc'])
-    if len(dict_0['arc']) > 1:
-        dict_0['arc_sd'] = stdev(dict_0['arc'])
+    if language == 'english':
+        dict_0['concreteness_mean'] = mean([i[0] for i in dict_0['concreteness']])
+        dict_0['concreteness_sd'] = stdev([i[0] for i in dict_0['concreteness']])
+        dict_0['valence_mean'] = mean([float(i[0]) for i in dict_0['valence']])
+        dict_0['valence_sd'] = stdev([float(i[0]) for i in dict_0['valence']])
+        dict_0['arousal_mean'] = mean([float(i[0]) for i in dict_0['arousal']])
+        dict_0['arousal_sd'] = stdev([float(i[0]) for i in dict_0['arousal']])
+        dict_0['dominance_mean'] = mean([float(i[0][:-3]) for i in dict_0['dominance']])
+        dict_0['dominance_sd'] = stdev([float(i[0][:-3]) for i in dict_0['dominance']])
+    
+    if 'arc' in dict_0:
+        if len(dict_0['arc']) > 0:
+            dict_0['arc_mean'] = mean(dict_0['arc'])
+        if len(dict_0['arc']) > 1:
+            dict_0['arc_sd'] = stdev(dict_0['arc'])
     if 'mean_sentiment_per_segment' in dict_0:
         dict_0['mean_sentiment_per_segment_mean'] = mean(dict_0['mean_sentiment_per_segment'])
         dict_0['mean_sentiment_per_segment_sd'] = stdev(dict_0['mean_sentiment_per_segment'])
