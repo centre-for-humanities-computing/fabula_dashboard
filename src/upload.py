@@ -145,12 +145,12 @@ def parse_contents(contents, filename, date, language, sentiment, text):
     ])
 
 @callback(Output('output-data-upload', 'children'),
-              Input('upload-data', 'contents'),
+              State('upload-data', 'contents'),
               State('upload-data', 'filename'),
               State('upload-data', 'last_modified'),
-              Input('lang-dropdown', 'value'),
-              Input('sent-dropdown', 'value'),
-              Input('textarea-example', 'value'),
+              State('lang-dropdown', 'value'),
+              State('sent-dropdown', 'value'),
+              State('textarea-example', 'value'),
               Input('submit-val', 'n_clicks'),
               prevent_initial_call=True)
 def update_output(list_of_contents, list_of_names, list_of_dates, language, sentiment, text, n_clicks):
