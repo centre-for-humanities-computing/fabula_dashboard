@@ -64,10 +64,14 @@ app.layout = html.Div(
         dcc.Dropdown(['afinn', 'vader', 'syuzhet', 'avg_syuzhet_vader'], id='sent-dropdown', placeholder="Select sentiment analysis method"),
         dcc.Upload(id='upload-data', children=html.Div(['Drag and Drop or ', html.A('Select Files')]), style={'width': '100%','height': '120px', 'lineHeight': '120px','borderWidth': '1px','borderStyle': 'dashed','borderRadius': '5px','textAlign': 'center','margin': '10px'},multiple=True),
         dcc.Textarea(id='textarea-example',value=None,style={'width': '100%', 'height': '120px', 'textAlign': 'center','margin': '10px'}),
-        html.Button('Submit', id='submit-val', n_clicks=0),
-        html.Div(id='output-data-upload'),
+        html.Button('Submit', id='submit-val', n_clicks=0, className = 'button'),
+        # html.Div(id='spinner-status'),
+        dcc.Loading(id = 'loading-1', type = 'cube', children = [html.Div(id='output-data-upload')], fullscreen = False),
+        #html.Div(id='output-data-upload'),
         html.H2(children='Explanation of Metrics'),
         dcc.Markdown(explanation_text),
+        # dcc.Store stores the intermediate value
+        dcc.Store(id='intermediate-value'),
     ]
 )
  
@@ -125,6 +129,8 @@ def parse_contents(contents, filename, date, language, sentiment, text):
         dict_0['mean_sentiment_per_segment_sd'] = stdev(dict_0['mean_sentiment_per_segment'])
     if 'approximate_entropy' in dict_0:
         dict_0['approximate_entropy_value'] = dict_0['approximate_entropy'][0]
+
+    print(dict_0['approximate_entropy'])
 
     dict_1 = {k: [v] for k, v in dict_0.items() if k not in ['concreteness', 'valence', 'arousal', 'dominance', 'arc', 'mean_sentiment_per_segment', 'approximate_entropy']}
 
@@ -568,6 +574,24 @@ def toggle_collapse_5(n, is_open):
         return not is_open
     return is_open
 
+# @callback(Output('spinner-status', 'children'),
+#           Input('submit-val', 'n_clicks'),
+#           Input('intermediate-value', 'data'))
+# def spinner_func(clicks, data = None):
+#     if clicks > 0:
+#         if data != None:
+#             return print("hoops")
+#         else:
+#             return html.Div([html.P("Retrieving info about 1000s of papers, please give it a few seconds",
+#                                             style = {'order': '1', 'font-size': '1.5rem', 'color':'rgba(3, 3, 3, 0.2)',
+#                                                     'text-align': 'center', 'margin-top': '10vh'}),
+#                                     #html.Img(src='assets/spinner.gif', style= {'order':'2', 'margin': 'auto'})
+#                                     dbc.Spinner(size="sm"),
+#                                     ],
+#                                     style= {'display': 'flex', 'flex-direction':'column', 'justify-content': 'center',
+#                                             'align-items': 'center', 'min-height': '400px', 'width':'60vw', 'margin': 'auto'})
+
+
 @callback(Output('output-data-upload', 'children'),
               State('upload-data', 'contents'),
               State('upload-data', 'filename'),
@@ -590,6 +614,12 @@ def update_output(list_of_contents, list_of_names, list_of_dates, language, sent
             children = parse_contents(text, list_of_names, list_of_dates, language, sentiment, text)
 
             return children
+
+# @callback(Output('output-data-upload', 'children'),
+#           Input('intermediate-value', 'data'))
+# def return_func(data):
+#     return data
+            
 
 if __name__ == '__main__':
     app.run(debug=True)
