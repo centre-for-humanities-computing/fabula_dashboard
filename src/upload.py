@@ -2,6 +2,7 @@ from dash import Dash, dcc, html, dash_table, Input, Output, State, callback
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 from dash_bootstrap_templates import load_figure_template
+from dash.exceptions import PreventUpdate
 
 import base64
 import datetime
@@ -39,42 +40,129 @@ def create_fig(metric, metric_format, title_1, title_2):
 
     return fig
 
-style_value_text = {'fontSize': 50, 'textAlign': 'center'}
+def value_boxes(column_name: str, value_name: str, df: pd.DataFrame, color: str) -> dbc.Col:
+    print(df[df['Metric'] == column_name]['Value'].values[0].round(2))
+    print(df[df['Metric'] == column_name]['Mean'].values[0].round(2))
+    return dbc.Col([
+        dbc.Card([
+            dbc.CardBody([
+                html.Div(f"{value_name}", style=style_value_text),
+                html.Div(f"{df[df['Metric'] == column_name]['Value'].values[0].round(2)}", style=style_value_value),
+                html.Div(f"(Global Mean {value_name} {df[df['Metric'] == column_name]['Mean'].values[0].round(2)})", style=style_value_global) if not df[df['Metric'] == column_name]['Mean'].isna().any() else None
+            ])
+        ] if column_name in df['Metric'].values else None, 
+        style = {"backgroundColor": color, 'borderColor': 'black'})
+    ], width = {'size': 3, 'offset': 2})
+
+def metrics_explanation(metric_group: str, explanation: str, id_but: str, id_col) -> dbc.Row:
+    return dbc.Row([
+         dbc.Col([
+              html.I(className="bi bi-caret-right-fill", n_clicks = 0, id=id_but, style={"fontSize": "30px", "color": "white", "cursor": "pointer"}),
+              html.H5("Description of metrics", style={"display": "inline"}),
+        ], width = {'size': 3, 'offset': 2}),
+        dbc.Collapse(
+            dbc.Card([
+                dbc.CardHeader(f"Explanation of {metric_group} Metrics"),
+                dbc.CardBody(dcc.Markdown(explanation))
+            ]), id=id_col, is_open=False),
+        ])
+
+style_value_text = {'fontSize': 30, 'textAlign': 'center'}
 style_value_value = {"textAlign": "center", "fontSize": 30}
 style_value_figure = {'display': 'inline-block'}
 style_value_global = {'fontSize': 15, 'textAlign': 'center'}
 
 personal_palette = ['#5D5EDB', '#D353C2', '#FF5F98', '#FF8D6F', '#FFC45A', '#F9F871']
+palette_1 = ['#5D5EDB', '#7E79FA', '#9D94FF', '#BDB1FF', '#DDCFFF']  
+palette_2 = ['#920086', '#D353C2']
+palette_3 = ['#B20059', '#FF5F98']
+palette_4 = ['#A9432C', '#FF8D6F']
+palette_5 = ['#9C6D00', '#FFC45A']
 
 # read in explanation filex
 with open('data/metrics_explanation.txt', 'r') as file:
             explanation_text = file.read()
 
 # read in explanation filex
+with open('data/stylometrics_explanations.txt', 'r') as file:
+            stylometrics_explanation_text = file.read()
 with open('data/sentiment_explanations.txt', 'r') as file:
-            sentiment_text = file.read()
+            sentiment_explanation_text = file.read()
+with open('data/entropy_explanations.txt', 'r') as file:
+            entropy_explanation_text = file.read()
+with open('data/readability_explanations.txt', 'r') as file:
+            readability_explanation_text = file.read()
+with open('data/roget_explanations.txt', 'r') as file:
+            roget_explanation_text = file.read()
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP],suppress_callback_exceptions=True)
 
-app.layout = html.Div(
-    children = [
-        html.H1(children='Language in Text'),
-        dcc.Dropdown(options={'english': 'English', 'danish': 'Danish'}, id='lang-dropdown', placeholder="Select a lagnguage"),
-        html.H1(children='Sentiment Analysis to use'),
-        dcc.Dropdown(['afinn', 'vader', 'syuzhet', 'avg_syuzhet_vader'], id='sent-dropdown', placeholder="Select sentiment analysis method"),
-        dcc.Upload(id='upload-data', children=html.Div(['Drag and Drop or ', html.A('Select Files')]), style={'width': '100%','height': '120px', 'lineHeight': '120px','borderWidth': '1px','borderStyle': 'dashed','borderRadius': '5px','textAlign': 'center','margin': '10px'},multiple=True),
-        dcc.Textarea(id='textarea-example',value=None,style={'width': '100%', 'height': '120px', 'textAlign': 'center','margin': '10px'}),
-        html.Button('Submit', id='submit-val', n_clicks=0, className = 'button'),
-        # html.Div(id='spinner-status'),
-        dcc.Loading(id = 'loading-1', type = 'cube', children = [html.Div(id='output-data-upload')], fullscreen = False),
-        #html.Div(id='output-data-upload'),
-        html.H2(children='Explanation of Metrics'),
-        dcc.Markdown(explanation_text),
-        # dcc.Store stores the intermediate value
-        dcc.Store(id='intermediate-value'),
-    ]
+# the style arguments for the sidebar. We use position:fixed and a fixed width
+SIDEBAR_STYLE = {
+    "position": "fixed",
+    "top": 0,
+    "left": 0,
+    "bottom": 0,
+    "width": "25%",
+    "padding": "2rem 1rem",
+    "background-color": "#f8f9fa",
+}
+
+# the styles for the main content position it to the right of the sidebar and
+# add some padding.
+CONTENT_STYLE = {
+    # "margin-left": "420px",
+    # "margin-left": "0px",
+    # "padding-left": "0px",
+    # "padding": "100px",
+}
+
+sidebar = html.Div([
+    html.Br(),
+    html.H1("Settings", className="text-center fw-bold fs-2"),
+    html.Br(),
+    html.H3(children='Language in Text', className="fw-bold"),
+    dcc.Dropdown(options=[{'value': 'english', 'label': 'English'}, {'value': 'danish', 'label': 'Danish'}], id='lang-dropdown', placeholder="Select a lagnguage", searchable = False, style = {'color': 'black'}),
+    html.Br(),
+    html.H3(children='Sentiment Analysis', style={'margin-top': '50px'}, className="fw-bold"),
+    dcc.Dropdown(id='sent-dropdown', placeholder="Select sentiment analysis method", searchable = False, style = {'color': 'black'}),
+    html.Br(),
+    html.H3(children='Upload File (.txt)', 
+            # style={'margin-top': '50px'}, 
+            className="fw-bold"),
+    dcc.Upload(id='upload-data', children=html.Div(['Drag and Drop or ', html.A('Select Files')]), style={'width': '100%',
+                                                                                                          'height': '120px', 
+                                                                                                          'lineHeight': '120px',
+                                                                                                          'borderWidth': '1px',
+                                                                                                          'borderStyle': 'dashed',
+                                                                                                          'borderRadius': '5px',
+                                                                                                          'textAlign': 'center',
+                                                                                                          'margin': '10px 20px 10px 0px'},multiple=True),
+    dcc.Textarea(id='textarea-example',value=None,style={'width': '100%', 
+                                                         'height': '120px', 
+                                                         'textAlign': 'left',
+                                                         'margin': '50px 20px 10px 0px'}),
+    html.Button('Submit', id='submit-val', n_clicks=0, className = 'button', style = {}),
+    ], className="bg-dark text-white", style=SIDEBAR_STYLE
 )
- 
+
+main_content = html.Div(
+    children = [
+        #html.Div(id='output-data-upload'),
+        # dcc.Store stores the intermediate value
+        dcc.Loading(id = 'loading-1', type = 'cube', children = [html.Div(id='output-data-upload')], fullscreen = False, style = {'position': 'fixed', 'top': '50%', 'left': '62.5%', 'transform': 'translate(-50%, -50%)'}, color = 'green'),
+        dcc.Store(id='intermediate-value'),
+    ],
+    style = CONTENT_STYLE
+)
+
+# app.layout = html.Div([
+#     html.Div([sidebar, main_content], className="row")
+# ], className="container-fluid", style={"height": "100vh"})
+app.layout = dbc.Container(
+    dbc.Row([dbc.Col(sidebar),
+             dbc.Col(main_content, width = {'size': 9, 'offset': 3})]),
+    className="container-fluid", style={}, fluid = True)
 
 def parse_contents(contents, filename, date, language, sentiment, text):
     
@@ -130,8 +218,6 @@ def parse_contents(contents, filename, date, language, sentiment, text):
     if 'approximate_entropy' in dict_0:
         dict_0['approximate_entropy_value'] = dict_0['approximate_entropy'][0]
 
-    print(dict_0['approximate_entropy'])
-
     dict_1 = {k: [v] for k, v in dict_0.items() if k not in ['concreteness', 'valence', 'arousal', 'dominance', 'arc', 'mean_sentiment_per_segment', 'approximate_entropy']}
 
     df = pd.DataFrame(dict_1)
@@ -148,381 +234,206 @@ def parse_contents(contents, filename, date, language, sentiment, text):
     concat_df.columns = ['Metric', 'Value', 'Mean']
 
     # use only specified rows from concat_df
-    sent_df = concat_df[concat_df['Metric'].isin(['mean_sentiment', 'std_sentiment', 'mean_sentiment_first_ten_percent', 'mean_sentiment_last_ten_percent', 'difference_lastten_therest' 'arc_mean', 'arc_sd', 'mean_sentiment_per_segment_mean', 'mean_sentiment_per_segment_sd'])]
+    style_df = concat_df[concat_df['Metric'].isin(['word_count', 'average_wordlen', 'msttr', 'average_sentlen', 'bzipr'])]
+    sent_df = concat_df[concat_df['Metric'].isin(['mean_sentiment', 'std_sentiment', 'mean_sentiment_first_ten_percent', 'mean_sentiment_last_ten_percent', 'difference_lastten_therest', 'arc_mean', 'arc_sd', 'mean_sentiment_per_segment_mean', 'mean_sentiment_per_segment_sd'])]
+    entropy_df = concat_df[concat_df['Metric'].isin(['word_entropy', 'bigram_entropy', 'approximate_entropy_value'])]
+    read_df = concat_df[concat_df['Metric'].isin(['flesch_grade', 'flesch_ease', 'smog', 'ari', 'dale_chall_new'])]
+    roget_df = concat_df[concat_df['Metric'].isin(['roget_n_tokens', 'roget_n_tokens_filtered', 'roget_n_cats'])]
 
     return html.Div([
-
+        
         html.Hr(),  # horizontal line
 
         html.P(children=(full_string[:500])),
 
         html.Hr(),  # horizontal line
 
-        html.P(children=(text)),
-
-        html.Hr(),  # horizontal line
-
-        dash_table.DataTable(
-            concat_df.to_dict('records'),
-            [{'name': i, 'id': i} for i in concat_df.columns],
-            style_cell={'textAlign': 'left'},
-            style_data={
-                 'color': 'black',
-                'backgroundColor': 'white'
-            },
-            style_data_conditional=[
-                 {
-                      'if': {'row_index': 'odd'},
-                      'backgroundColor': 'rgb(220, 220, 220)',
-                      }
-                      ],
-            style_header={
-                 'backgroundColor': 'rgb(210, 210, 210)',
-                 'color': 'black',
-                 'fontWeight': 'bold'
-                 }
-        ),
-
-        html.Hr(),  # horizontal line
-
-    html.Div([
-        html.H2(children='Stylometrics'),
-        dbc.Container([
+        html.Div([
+            html.H2(children='Stylometrics', className="fw-bold text-white"),
             dbc.Row([
-                dbc.Card([
-                    dbc.CardHeader("Table of Sentiment Metrics", style = {'textAlign': 'center', 'fontSize': 20, 'fontWeight': 'bold', 'color': 'black'}),
-                    dbc.CardBody(
-                        dash_table.DataTable(
-                            data=sent_df.to_dict('records'),
-                            columns=[{'name': i, 'id': i} for i in sent_df.columns],
-                            style_cell={'textAlign': 'left'},
-                            style_header={
-                                'backgroundColor': 'white',
-                                'fontWeight': 'bold',
-                                'width': 'auto'
-                            }
-                        )
-                    )
-                ],
-                style={"marginTop": 10, "marginBottom": 10, 'width': '80%', 'float': 'left'}),
-            ], style = {}),
+                value_boxes('word_count', 'Word Count', style_df, palette_1[2]),
+                value_boxes('average_wordlen', 'Word Length', style_df, palette_1[2]),
+            ], style={"marginTop": 10, "marginBottom": 10}),
             dbc.Row([
-                dbc.Col([
-                    dbc.Card([
-                        dbc.CardBody(
-                            dcc.Graph(
-                                figure=go.Figure(
-                                    data=[go.Bar(x=['Text', 'Mean'], y=[sent_df[sent_df['Metric'] == 'mean_sentiment']['Value'].values[0], sent_df[sent_df['Metric'] == 'mean_sentiment']['Mean'].values[0]], name='Sentiment')],
-                                    layout=go.Layout(title='Mean Sentiment')
-                                )
-                            )
-                        )
+                value_boxes('msttr', 'MSTTR', style_df, palette_1[2]),
+                value_boxes('average_sentlen', 'Average Sentence Length', style_df, palette_1[2]),
+            ], style={"marginTop": 10, "marginBottom": 10}),
+            dbc.Row([
+                value_boxes('bzipr', 'bzipr', style_df, palette_1[2]),
+            ], style={"marginTop": 10, "marginBottom": 10}),
+            metrics_explanation('Stylometrics', stylometrics_explanation_text, "collapse-button_1", "collapse_1"),
+        ], style = {"backgroundColor": personal_palette[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"}),
+
+        html.Div([
+            html.H2(children='Sentiment', className="fw-bold text-white"),
+            dbc.Row([
+                value_boxes('mean_sentiment', 'Mean Sentiment', sent_df, palette_2[1]),
+                value_boxes('mean_sentiment_first_ten_percent', 'Mean Sentiment First 10%', sent_df, palette_2[1]),
+            ], style={"marginTop": 10, "marginBottom": 10}),
+            dbc.Row([
+                value_boxes('mean_sentiment_last_ten_percent', 'Mean Sentiment Last 10%', sent_df, palette_2[1]),
+                value_boxes('difference_lastten_therest', 'Difference between last 10 and the rest', sent_df, palette_2[1]),
+            ], style={"marginTop": 10, "marginBottom": 10}),
+            metrics_explanation('Sentiment', sentiment_explanation_text, "collapse-button_2", "collapse_2"),
+        ], style = {"backgroundColor": palette_2[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"}),
+
+        html.Div([
+            html.H2(children='Entropy', className="fw-bold text-white"),
+            dbc.Row([
+                value_boxes('word_entropy', 'Word Entropy', entropy_df, palette_3[1]),
+                value_boxes('bigram_entropy', 'Bigram Entropy', entropy_df, palette_3[1]),
+            ], style={"marginTop": 10, "marginBottom": 10}),
+            dbc.Row([
+                value_boxes('approximate_entropy_value', 'Approximate Entropy', entropy_df, palette_3[1]),
+            ], style={"marginTop": 10, "marginBottom": 10}),
+            metrics_explanation('Entropy', entropy_explanation_text, "collapse-button_3", "collapse_3"),
+        ], style = {"backgroundColor": palette_3[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"}),
+
+        html.Div([
+            html.H2(children='Readability', className="fw-bold text-white"),
+            dbc.Row([
+                value_boxes('flesch_grade', 'Flesch Grade', read_df, palette_4[1]),
+                value_boxes('flesch_ease', 'Flesch Ease', read_df, palette_4[1]),
+            ], style={"marginTop": 10, "marginBottom": 10}),
+            dbc.Row([
+                value_boxes('smog', 'Smog', read_df, palette_4[1]),
+                value_boxes('ari', 'Ari', read_df, palette_4[1]),
+            ], style={"marginTop": 10, "marginBottom": 10}),
+            dbc.Row([
+                value_boxes('dale_chall_new', 'Dale Chall New', read_df, palette_4[1]),
+            ], style={"marginTop": 10, "marginBottom": 10}),
+            metrics_explanation('Readability', readability_explanation_text, "collapse-button_4", "collapse_4"),
+        ], style = {"backgroundColor": palette_4[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"}),
+
+        html.Div([
+            html.H2(children='Roget', className="fw-bold text-white"),
+            dbc.Row([
+                value_boxes('roget_n_tokens', 'Roget n Tokens', roget_df, palette_5[1]),
+                value_boxes('roget_n_tokens_filtered', 'Roget Filtered', roget_df, palette_5[1]),
+            ], style={"marginTop": 10, "marginBottom": 10}),
+            dbc.Row([
+                value_boxes('roget_n_cats', 'Roget n Categories', roget_df, palette_5[1]),
+            ], style={"marginTop": 10, "marginBottom": 10}),
+            metrics_explanation('Roget', roget_explanation_text, "collapse-button_5", "collapse_5"),
+        ], style = {"backgroundColor": palette_5[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"}),
+
+    # html.Div([
+    #     html.H2(children='Sentiment'),
+    #     dbc.Container([
+
+    #         dbc.Row([dcc.Graph(
+    #             figure=go.Figure(
+    #                 data=[go.Scatter(x=list(range(21)), y=dict_0['arc'], mode='lines')],
+    #                 layout=go.Layout(title='Arc Time Series', template = 'minty')
+    #             )
+    #         )]),
+    #         dbc.Row([
+    #             html.Div([
+    #             html.I(className="bi bi-caret-right-fill", n_clicks = 0, id="collapse-button_1", style={"fontSize": "30px", "color": "white", "cursor": "pointer"}),
+    #             html.H5("Description of metrics", style={"display": "inline"}),
+    #             ]),
+    #             dbc.Collapse(
+    #                 dbc.Card([
+    #                     dbc.CardHeader("Explanation of Sentiment Metrics"),
+    #                     dbc.CardBody(
+    #                         dcc.Markdown(sentiment_text)
+    #                     )
+    #                 ]),
+    #                 id="collapse_1",
+    #                 is_open=False,
+    #             ),
+    #         ]),
+    #     ])
+    # ], style={"backgroundColor": personal_palette[1], 
+    #           "padding": "10px", 
+    #           "borderRadius": "15px", 
+    #             "display": "inline-block", 
+    #             "width": "100%", 
+    #             'margin': '10px'
+    #             },),
+
+
+
+    # html.Div([
+    #     html.H2(children='Roget'),
+    #     dbc.Container([
+    #         dbc.Row([
+    #             dbc.Card([
+    #                 dbc.CardHeader("Table of Sentiment Metrics", style = {'textAlign': 'center', 'fontSize': 20, 'fontWeight': 'bold', 'color': 'black'}),
+    #                 dbc.CardBody(
+    #                     dash_table.DataTable(
+    #                         data=sent_df.to_dict('records'),
+    #                         columns=[{'name': i, 'id': i} for i in sent_df.columns],
+    #                         style_cell={'textAlign': 'left'},
+    #                         style_header={
+    #                             'backgroundColor': 'white',
+    #                             'fontWeight': 'bold',
+    #                             'width': 'auto'
+    #                         }
+    #                     )
+    #                 )
+    #             ],
+    #             style={"marginTop": 10, "marginBottom": 10, 'width': '80%', 'float': 'left'}),
+    #         ], style = {}),
+    #         dbc.Row([
+    #             html.Div([
+    #             html.I(className="bi bi-caret-right-fill", n_clicks = 0, id="collapse-button_5", style={"fontSize": "30px", "color": "white", "cursor": "pointer"}),
+    #             html.H5("Description of metrics", style={"display": "inline"}),
+    #             ]),
+    #             dbc.Collapse(
+    #                 dbc.Card([
+    #                     dbc.CardHeader("Explanation of Sentiment Metrics"),
+    #                     dbc.CardBody(
+    #                         dcc.Markdown("hello")
+    #                     )
+    #                 ]),
+    #                 id="collapse_5",
+    #                 is_open=False,
+    #             ),
+    #         ]),
+    #     ])
+    # ], style={"backgroundColor": personal_palette[4], "padding": "10px", "borderRadius": "15px",  "display": "inline-block", "width": "100%", 'margin': '10px'},) if language == 'english' else None,
+
+
+    html.Hr(),  # horizontal line
+
+    dash_table.DataTable(
+        concat_df.to_dict('records'),
+        [{'name': i, 'id': i} for i in concat_df.columns],
+        style_cell={'textAlign': 'left'},
+        style_data={
+                'color': 'black',
+            'backgroundColor': 'white'
+        },
+        style_data_conditional=[
+                {
+                    'if': {'row_index': 'odd'},
+                    'backgroundColor': 'rgb(220, 220, 220)',
+                    }
                     ],
-                    style={"marginTop": 20, "marginBottom": 20}),
-                ]),
-                dbc.Col([
-                    dbc.Card([
-                        dbc.CardBody(
-                            dcc.Graph(
-                                figure=go.Figure(
-                                    data=[go.Bar(x=['Text', 'Mean'], y=[sent_df[sent_df['Metric'] == 'std_sentiment']['Value'].values[0], sent_df[sent_df['Metric'] == 'std_sentiment']['Mean'].values[0]], name='Sentiment')],
-                                    layout=go.Layout(title='Standard Deviation of Sentiment')
-                                )
-                            )
-                        )
-                    ],
-                    style={"marginTop": 20, "marginBottom": 20}),
-                ]),
-            ]) if 'mean_sentiment' in sent_df['Metric'].values else None,
-            dbc.Row([
-                html.Div([
-                html.I(className="bi bi-caret-right-fill", n_clicks = 0, id="collapse-button_2", style={"fontSize": "30px", "color": "white", "cursor": "pointer"}),
-                html.H5("Description of metrics", style={"display": "inline"}),
-                ]),
-                dbc.Collapse(
-                    dbc.Card([
-                        dbc.CardHeader("Explanation of Sentiment Metrics"),
-                        dbc.CardBody(
-                            dcc.Markdown("hello")
-                        )
-                    ]),
-                    id="collapse_2",
-                    is_open=False,
-                ),
-            ]),
-        ])
-    ], style={"backgroundColor": personal_palette[0], "padding": "10px", "borderRadius": "15px",  "display": "inline-block", "width": "100%", 'margin': '10px'},),
-
-    html.Div([
-        html.H2(children='Sentiment'),
-        dbc.Container([
-            dbc.Row([
-                dbc.Col(
-                    html.Div(
-                        [
-                            html.Div(f"Mean Sentiment", style=style_value_text),
-                            html.Div(
-                                id=f"value-1",
-                                children=f"{sent_df[sent_df['Metric'] == 'mean_sentiment']['Value'].values[0].round(2)}",
-                                style=style_value_value,
-                            ),
-                            html.Div(
-                                f"(Global Mean Sentiment {sent_df[sent_df['Metric'] == 'mean_sentiment']['Mean'].values[0].round(2)})", 
-                                style=style_value_global),
-                        ],
-                        style={'backgroundColor': '#5BBB82', 'borderRadius': '15px', 'padding': '10px', 'display': 'inline-block','border': '1px solid black'},
-                    ) if 'mean_sentiment' in sent_df['Metric'].values else None
-                ),
-                dbc.Col(
-                    html.Div(
-                        [
-                            html.Div(f"Mean Sentiment First 10%", style=style_value_text),
-                            html.Div(
-                                id=f"value-1",
-                                children=f"{sent_df[sent_df['Metric'] == 'mean_sentiment_first_ten_percent']['Value'].values[0].round(2)}",
-                                style=style_value_value,
-                            ),
-                            html.Div(
-                                f"(Global Mean Sentiment {sent_df[sent_df['Metric'] == 'mean_sentiment_first_ten_percent']['Mean'].values[0].round(2)})", 
-                                style=style_value_global),
-                        ],
-                        style={'display': 'inline-block'},
-                    ) if 'mean_sentiment_first_ten_percent' in sent_df['Metric'].values else None
-                ),
-                dbc.Col(
-                    html.Div(
-                        [
-                            html.Div(f"Mean Sentiment Last 10%", style=style_value_text),
-                            html.Div(
-                                id=f"value-1",
-                                children=f"{sent_df[sent_df['Metric'] == 'mean_sentiment_last_ten_percent']['Value'].values[0].round(2)}",
-                                style=style_value_value,
-                            ),
-                            html.Div(
-                                f"(Global Mean Sentiment {sent_df[sent_df['Metric'] == 'mean_sentiment_last_ten_percent']['Mean'].values[0].round(2)})", 
-                                style=style_value_global),
-                        ],
-                        style={'display': 'inline-block'},
-                    ) if 'mean_sentiment_last_ten_percent' in sent_df['Metric'].values else None
-                ),
-                dbc.Col(
-                    html.Div(
-                        [
-                            html.Div(f"Difference between last 10% and the rest", style=style_value_text),
-                            html.Div(
-                                id=f"value-1",
-                                children=f"{sent_df[sent_df['Metric'] == 'difference_lastten_therest']['Value'].values[0].round(2)}",
-                                style=style_value_value,
-                            ),
-                        ],
-                        style={'display': 'inline-block'},
-                    ) if 'difference_lastten_therest' in sent_df['Metric'].values else None
-                ),
-            ]),
-            
-            
-            # dbc.Row([
-            #     dbc.Card([
-            #         dbc.CardHeader("Table of Sentiment Metrics", style = {'textAlign': 'center', 'fontSize': 20, 'fontWeight': 'bold', 'color': 'black'}),
-            #         dbc.CardBody(
-            #             dash_table.DataTable(
-            #                 data=sent_df.to_dict('records'),
-            #                 columns=[{'name': i, 'id': i} for i in sent_df.columns],
-            #                 style_cell={'textAlign': 'left'},
-            #                 style_header={
-            #                     'backgroundColor': 'white',
-            #                     'fontWeight': 'bold',
-            #                     'width': 'auto'
-            #                 }
-            #             )
-            #         )
-            #     ],
-            #     style={"marginTop": 10, "marginBottom": 10, 'width': '80%', 'float': 'left'}),
-            # ], style = {}),
-            # dbc.Row([
-            #     dbc.Col([
-            #         dbc.Card([
-            #             dbc.CardBody(
-            #                 dcc.Graph(
-            #                     figure=go.Figure(
-            #                         data=[go.Bar(x=['Text', 'Mean'], y=[sent_df[sent_df['Metric'] == 'mean_sentiment']['Value'].values[0], sent_df[sent_df['Metric'] == 'mean_sentiment']['Mean'].values[0]], name='Sentiment')],
-            #                         layout=go.Layout(title='Mean Sentiment')
-            #                     )
-            #                 )
-            #             )
-            #         ],
-            #         style={"marginTop": 20, "marginBottom": 20}),
-            #     ]),
-            #     dbc.Col([
-            #         dbc.Card([
-            #             dbc.CardBody(
-            #                 dcc.Graph(
-            #                     figure=go.Figure(
-            #                         data=[go.Bar(x=['Text', 'Mean'], y=[sent_df[sent_df['Metric'] == 'std_sentiment']['Value'].values[0], sent_df[sent_df['Metric'] == 'std_sentiment']['Mean'].values[0]], name='Sentiment')],
-            #                         layout=go.Layout(title='Standard Deviation of Sentiment')
-            #                     )
-            #                 )
-            #             )
-            #         ],
-            #         style={"marginTop": 20, "marginBottom": 20}),
-            #     ]),
-            # ]) if 'mean_sentiment' in sent_df['Metric'].values else None,
-            dbc.Row([dcc.Graph(
-                figure=go.Figure(
-                    data=[go.Scatter(x=list(range(21)), y=dict_0['arc'], mode='lines')],
-                    layout=go.Layout(title='Arc Time Series', template = 'minty')
-                )
-            )]),
-            dbc.Row([
-                html.Div([
-                html.I(className="bi bi-caret-right-fill", n_clicks = 0, id="collapse-button_1", style={"fontSize": "30px", "color": "white", "cursor": "pointer"}),
-                html.H5("Description of metrics", style={"display": "inline"}),
-                ]),
-                dbc.Collapse(
-                    dbc.Card([
-                        dbc.CardHeader("Explanation of Sentiment Metrics"),
-                        dbc.CardBody(
-                            dcc.Markdown(sentiment_text)
-                        )
-                    ]),
-                    id="collapse_1",
-                    is_open=False,
-                ),
-            ]),
-        ])
-    ], style={"backgroundColor": personal_palette[1], 
-              "padding": "10px", 
-              "borderRadius": "15px", 
-                "display": "inline-block", 
-                "width": "100%", 
-                'margin': '10px'
-                },),
+        style_header={
+                'backgroundColor': 'rgb(210, 210, 210)',
+                'color': 'black',
+                'fontWeight': 'bold'
+                }
+    ),
 
 
-    html.Div([
-        html.H2(children='Entropy'),
-        dbc.Container([
-            dbc.Row([
-                dbc.Card([
-                    dbc.CardHeader("Table of Sentiment Metrics", style = {'textAlign': 'center', 'fontSize': 20, 'fontWeight': 'bold', 'color': 'black'}),
-                    dbc.CardBody(
-                        dash_table.DataTable(
-                            data=sent_df.to_dict('records'),
-                            columns=[{'name': i, 'id': i} for i in sent_df.columns],
-                            style_cell={'textAlign': 'left'},
-                            style_header={
-                                'backgroundColor': 'white',
-                                'fontWeight': 'bold',
-                                'width': 'auto'
-                            }
-                        )
-                    )
-                ],
-                style={"marginTop": 10, "marginBottom": 10, 'width': '80%', 'float': 'left'}),
-            ], style = {}),
-            dbc.Row([
-                html.Div([
-                html.I(className="bi bi-caret-right-fill", n_clicks = 0, id="collapse-button_3", style={"fontSize": "30px", "color": "white", "cursor": "pointer"}),
-                html.H5("Description of metrics", style={"display": "inline"}),
-                ]),
-                dbc.Collapse(
-                    dbc.Card([
-                        dbc.CardHeader("Explanation of Sentiment Metrics"),
-                        dbc.CardBody(
-                            dcc.Markdown("hello")
-                        )
-                    ]),
-                    id="collapse_3",
-                    is_open=False,
-                ),
-            ]),
-        ])
-    ], style={"backgroundColor": personal_palette[2], "padding": "10px", "borderRadius": "15px",  "display": "inline-block", "width": "100%", 'margin': '10px'},),
-
-
-    html.Div([
-        html.H2(children='Readability'),
-        dbc.Container([
-            dbc.Row([
-                dbc.Card([
-                    dbc.CardHeader("Table of Sentiment Metrics", style = {'textAlign': 'center', 'fontSize': 20, 'fontWeight': 'bold', 'color': 'black'}),
-                    dbc.CardBody(
-                        dash_table.DataTable(
-                            data=sent_df.to_dict('records'),
-                            columns=[{'name': i, 'id': i} for i in sent_df.columns],
-                            style_cell={'textAlign': 'left'},
-                            style_header={
-                                'backgroundColor': 'white',
-                                'fontWeight': 'bold',
-                                'width': 'auto'
-                            }
-                        )
-                    )
-                ],
-                style={"marginTop": 10, "marginBottom": 10, 'width': '80%', 'float': 'left'}),
-            ], style = {}),
-            dbc.Row([
-                html.Div([
-                html.I(className="bi bi-caret-right-fill", n_clicks = 0, id="collapse-button_4", style={"fontSize": "30px", "color": "white", "cursor": "pointer"}),
-                html.H5("Description of metrics", style={"display": "inline"}),
-                ]),
-                dbc.Collapse(
-                    dbc.Card([
-                        dbc.CardHeader("Explanation of Sentiment Metrics"),
-                        dbc.CardBody(
-                            dcc.Markdown("hello")
-                        )
-                    ]),
-                    id="collapse_4",
-                    is_open=False,
-                ),
-            ]),
-        ])
-    ], style={"backgroundColor": personal_palette[3], "padding": "10px", "borderRadius": "15px",  "display": "inline-block", "width": "100%", 'margin': '10px'},) if language == 'english' else None,
-
-
-    html.Div([
-        html.H2(children='Roget'),
-        dbc.Container([
-            dbc.Row([
-                dbc.Card([
-                    dbc.CardHeader("Table of Sentiment Metrics", style = {'textAlign': 'center', 'fontSize': 20, 'fontWeight': 'bold', 'color': 'black'}),
-                    dbc.CardBody(
-                        dash_table.DataTable(
-                            data=sent_df.to_dict('records'),
-                            columns=[{'name': i, 'id': i} for i in sent_df.columns],
-                            style_cell={'textAlign': 'left'},
-                            style_header={
-                                'backgroundColor': 'white',
-                                'fontWeight': 'bold',
-                                'width': 'auto'
-                            }
-                        )
-                    )
-                ],
-                style={"marginTop": 10, "marginBottom": 10, 'width': '80%', 'float': 'left'}),
-            ], style = {}),
-            dbc.Row([
-                html.Div([
-                html.I(className="bi bi-caret-right-fill", n_clicks = 0, id="collapse-button_5", style={"fontSize": "30px", "color": "white", "cursor": "pointer"}),
-                html.H5("Description of metrics", style={"display": "inline"}),
-                ]),
-                dbc.Collapse(
-                    dbc.Card([
-                        dbc.CardHeader("Explanation of Sentiment Metrics"),
-                        dbc.CardBody(
-                            dcc.Markdown("hello")
-                        )
-                    ]),
-                    id="collapse_5",
-                    is_open=False,
-                ),
-            ]),
-        ])
-    ], style={"backgroundColor": personal_palette[4], "padding": "10px", "borderRadius": "15px",  "display": "inline-block", "width": "100%", 'margin': '10px'},) if language == 'english' else None,
-
-
+    html.H2(children='Explanation of Metrics'),
+    dcc.Markdown(explanation_text),
 ])
+
+@app.callback(
+    Output('sent-dropdown', "options"),
+    Input('lang-dropdown', "value")
+)
+def update_options(value):
+    if value=='english':
+        return ['afinn', 'vader', 'syuzhet', 'avg_syuzhet_vader']
+    if value=='danish':
+        return ['afinn']
+    else:
+        raise PreventUpdate
 
 @app.callback(
     Output("collapse_1", "is_open"),
