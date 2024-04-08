@@ -32,6 +32,9 @@ def sd_float(l):
 df['arc_mean'] = df['ARC_SEGMENTS_MEANS'].map(mean_float)
 df['arc_sd'] = df['ARC_SEGMENTS_MEANS'].map(sd_float)
 
+# subset rows with a 1 in the 'BESTSELLERS' column or in the 'CANON_ALL' column
+df = df[(df['BESTSELLERS'] == 1) | (df['CANON_ALL'] == 1)]
+
 df_subset = df.loc[:,['TITLE_LENGTH', 'HURST', 'APPENT', 'WORDCOUNT', 
                        'SENTENCE_LENGTH', 'BZIP_NEW', 'MSTTR-100', 
                        'BZIP_TXT', 'READABILITY_FLESCH_GRADE', 
@@ -59,8 +62,9 @@ df_subset = df.loc[:,['TITLE_LENGTH', 'HURST', 'APPENT', 'WORDCOUNT',
                        'NOMINAL_VERB_RATIO','APPENT_SYUZHET','mean_con','mean_val',
                        'mean_aro','mean_dom','std_con','std_val','std_aro','std_dom', 'arc_mean', 'arc_sd']]
 
-# change column names to be more descriptive
+# choose 
 
+# change column names to be more descriptive
 df_subset.columns = ['TITLE_LENGTH', 'hurst','approximate_entropy_value', 'word_count', 
                        'average_sentlen', 'bzipr', 'msttr', 
                        'BZIP_TXT', 'flesch_grade', 

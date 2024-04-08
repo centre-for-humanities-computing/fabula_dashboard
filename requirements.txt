@@ -15,3 +15,4 @@ tqdm
 rpy2
 lxml
 dash_bootstrap_components
+dash-iconify

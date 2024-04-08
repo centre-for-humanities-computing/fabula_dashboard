@@ -3,6 +3,7 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 from dash_bootstrap_templates import load_figure_template
 from dash.exceptions import PreventUpdate
+from dash_iconify import DashIconify
 
 import base64
 import datetime
@@ -59,7 +60,7 @@ def metrics_explanation(metric_group: str, explanation: str, id_but: str, id_col
          dbc.Col([
               html.I(className="bi bi-caret-right-fill", n_clicks = 0, id=id_but, style={"fontSize": "30px", "color": "white", "cursor": "pointer"}),
               html.H5("Description of metrics", style={"display": "inline"}),
-        ], width = {'size': 3, 'offset': 2}),
+        ], width = {'size': 3, 'offset': 1}),
         dbc.Collapse(
             dbc.Card([
                 dbc.CardHeader(f"Explanation of {metric_group} Metrics"),
@@ -143,8 +144,13 @@ sidebar = html.Div([
                                                          'textAlign': 'left',
                                                          'margin': '50px 20px 10px 0px'}),
     html.Button('Submit', id='submit-val', n_clicks=0, className = 'button', style = {}),
-    ], className="bg-dark text-white", style=SIDEBAR_STYLE
-)
+    html.Div(children = [html.P("Made by Fabula-NET", style = {'position': 'fixed', 'bottom': '0', 'left': '20px','color': 'white', 'padding': '10px'}), 
+                        html.A([DashIconify(icon="ion:logo-github", width = 50, color = 'white', style = {'position': 'fixed', 'bottom': '15px', 'left': '200px', 'cursor': 'pointer'})
+                                ], href = "https://github.com/centre-for-humanities-computing/fabula_pipeline/", target = "_blank"),
+                        html.A([DashIconify(icon="ph:globe", width = 55, color = 'white', style = {'position': 'fixed', 'bottom': '12px', 'left': '265px', 'cursor': 'pointer'})
+                                ], href = "https://centre-for-humanities-computing.github.io/fabula-net/", target = "_blank")
+                        ]),
+], className="bg-dark text-white", style=SIDEBAR_STYLE)
 
 main_content = html.Div(
     children = [
