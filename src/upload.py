@@ -63,9 +63,9 @@ def metrics_explanation(metric_group: str, explanation: str, id_but: str, id_col
         ], width = {'size': 3, 'offset': 1}),
         dbc.Collapse(
             dbc.Card([
-                dbc.CardHeader(f"Explanation of {metric_group} Metrics"),
-                dbc.CardBody(dcc.Markdown(explanation))
-            ]), id=id_col, is_open=False),
+                html.H3(children=f"Explanation of {metric_group} Metrics", style = {'textAlign': 'left'}),
+                html.Div(dcc.Markdown(explanation))
+            ], style = {'backgroundColor': palette_1[1], 'borderColor': 'black', 'padding': '10px'}), id=id_col, is_open=False),
         ])
 
 style_value_text = {'fontSize': 30, 'textAlign': 'center'}
