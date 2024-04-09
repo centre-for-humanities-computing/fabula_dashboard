@@ -44,8 +44,6 @@ def create_fig(metric, metric_format, title_1, title_2):
     return fig
 
 def value_boxes(column_name: str, value_name: str, df: pd.DataFrame, color: str) -> dbc.Col:
-    # print(df[df['Metric'] == column_name]['Value'].values[0].round(2))
-    # print(df[df['Metric'] == column_name]['Mean'].values[0].round(2))
     return dbc.Col([
         dbc.Card([
             dbc.CardBody([
@@ -360,153 +358,6 @@ def parse_contents(contents, filename, date, language, sentiment, text):
 
         html.Hr(),  # horizontal line
 
-        # html.Div([
-        #     html.H2(children='Stylometrics', className="fw-bold text-white"),
-        #     dbc.Row([
-        #         value_boxes('word_count', 'Word Count', style_df, palette_1[2]),
-        #         value_boxes('average_wordlen', 'Word Length', style_df, palette_1[2]),
-        #     ], style={"marginTop": 10, "marginBottom": 10}),
-        #     dbc.Row([
-        #         value_boxes('msttr', 'MSTTR', style_df, palette_1[2]),
-        #         value_boxes('average_sentlen', 'Average Sentence Length', style_df, palette_1[2]),
-        #     ], style={"marginTop": 10, "marginBottom": 10}),
-        #     dbc.Row([
-        #         value_boxes('bzipr', 'bzipr', style_df, palette_1[2]),
-        #     ], style={"marginTop": 10, "marginBottom": 10}),
-        #     metrics_explanation('Stylometrics', stylometrics_explanation_text, "collapse-button_1", "collapse_1"),
-        # ], style = {"backgroundColor": personal_palette[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"}),
-
-        # html.Div([
-        #     html.H2(children='Sentiment', className="fw-bold text-white"),
-        #     dbc.Row([
-        #         value_boxes('mean_sentiment', 'Mean Sentiment', sent_df, palette_2[1]),
-        #         value_boxes('mean_sentiment_first_ten_percent', 'Mean Sentiment First 10%', sent_df, palette_2[1]),
-        #     ], style={"marginTop": 10, "marginBottom": 10}),
-        #     dbc.Row([
-        #         value_boxes('mean_sentiment_last_ten_percent', 'Mean Sentiment Last 10%', sent_df, palette_2[1]),
-        #         value_boxes('difference_lastten_therest', 'Difference between last 10 and the rest', sent_df, palette_2[1]),
-        #     ], style={"marginTop": 10, "marginBottom": 10}),
-        #     metrics_explanation('Sentiment', sentiment_explanation_text, "collapse-button_2", "collapse_2"),
-        # ], style = {"backgroundColor": palette_2[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"}),
-
-        # html.Div([
-        #     html.H2(children='Entropy', className="fw-bold text-white"),
-        #     dbc.Row([
-        #         value_boxes('word_entropy', 'Word Entropy', entropy_df, palette_3[1]),
-        #         value_boxes('bigram_entropy', 'Bigram Entropy', entropy_df, palette_3[1]),
-        #     ], style={"marginTop": 10, "marginBottom": 10}),
-        #     dbc.Row([
-        #         value_boxes('approximate_entropy_value', 'Approximate Entropy', entropy_df, palette_3[1]),
-        #     ], style={"marginTop": 10, "marginBottom": 10}),
-        #     metrics_explanation('Entropy', entropy_explanation_text, "collapse-button_3", "collapse_3"),
-        # ], style = {"backgroundColor": palette_3[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"}),
-
-        # html.Div([
-        #     html.H2(children='Readability', className="fw-bold text-white"),
-        #     dbc.Row([
-        #         value_boxes('flesch_grade', 'Flesch Grade', read_df, palette_4[1]),
-        #         value_boxes('flesch_ease', 'Flesch Ease', read_df, palette_4[1]),
-        #     ], style={"marginTop": 10, "marginBottom": 10}),
-        #     dbc.Row([
-        #         value_boxes('smog', 'Smog', read_df, palette_4[1]),
-        #         value_boxes('ari', 'Ari', read_df, palette_4[1]),
-        #     ], style={"marginTop": 10, "marginBottom": 10}),
-        #     dbc.Row([
-        #         value_boxes('dale_chall_new', 'Dale Chall New', read_df, palette_4[1]),
-        #     ], style={"marginTop": 10, "marginBottom": 10}),
-        #     metrics_explanation('Readability', readability_explanation_text, "collapse-button_4", "collapse_4"),
-        # ], style = {"backgroundColor": palette_4[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"}),
-
-        # html.Div([
-        #     html.H2(children='Roget', className="fw-bold text-white"),
-        #     dbc.Row([
-        #         value_boxes('roget_n_tokens', 'Roget n Tokens', roget_df, palette_5[1]),
-        #         value_boxes('roget_n_tokens_filtered', 'Roget Filtered', roget_df, palette_5[1]),
-        #     ], style={"marginTop": 10, "marginBottom": 10}),
-        #     dbc.Row([
-        #         value_boxes('roget_n_cats', 'Roget n Categories', roget_df, palette_5[1]),
-        #     ], style={"marginTop": 10, "marginBottom": 10}),
-        #     metrics_explanation('Roget', roget_explanation_text, "collapse-button_5", "collapse_5"),
-        # ], style = {"backgroundColor": palette_5[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"}),
-
-    # html.Div([
-    #     html.H2(children='Sentiment'),
-    #     dbc.Container([
-
-    #         dbc.Row([dcc.Graph(
-    #             figure=go.Figure(
-    #                 data=[go.Scatter(x=list(range(21)), y=dict_0['arc'], mode='lines')],
-    #                 layout=go.Layout(title='Arc Time Series', template = 'minty')
-    #             )
-    #         )]),
-    #         dbc.Row([
-    #             html.Div([
-    #             html.I(className="bi bi-caret-right-fill", n_clicks = 0, id="collapse-button_1", style={"fontSize": "30px", "color": "white", "cursor": "pointer"}),
-    #             html.H5("Description of metrics", style={"display": "inline"}),
-    #             ]),
-    #             dbc.Collapse(
-    #                 dbc.Card([
-    #                     dbc.CardHeader("Explanation of Sentiment Metrics"),
-    #                     dbc.CardBody(
-    #                         dcc.Markdown(sentiment_text)
-    #                     )
-    #                 ]),
-    #                 id="collapse_1",
-    #                 is_open=False,
-    #             ),
-    #         ]),
-    #     ])
-    # ], style={"backgroundColor": personal_palette[1], 
-    #           "padding": "10px", 
-    #           "borderRadius": "15px", 
-    #             "display": "inline-block", 
-    #             "width": "100%", 
-    #             'margin': '10px'
-    #             },),
-
-
-
-    # html.Div([
-    #     html.H2(children='Roget'),
-    #     dbc.Container([
-    #         dbc.Row([
-    #             dbc.Card([
-    #                 dbc.CardHeader("Table of Sentiment Metrics", style = {'textAlign': 'center', 'fontSize': 20, 'fontWeight': 'bold', 'color': 'black'}),
-    #                 dbc.CardBody(
-    #                     dash_table.DataTable(
-    #                         data=sent_df.to_dict('records'),
-    #                         columns=[{'name': i, 'id': i} for i in sent_df.columns],
-    #                         style_cell={'textAlign': 'left'},
-    #                         style_header={
-    #                             'backgroundColor': 'white',
-    #                             'fontWeight': 'bold',
-    #                             'width': 'auto'
-    #                         }
-    #                     )
-    #                 )
-    #             ],
-    #             style={"marginTop": 10, "marginBottom": 10, 'width': '80%', 'float': 'left'}),
-    #         ], style = {}),
-    #         dbc.Row([
-    #             html.Div([
-    #             html.I(className="bi bi-caret-right-fill", n_clicks = 0, id="collapse-button_5", style={"fontSize": "30px", "color": "white", "cursor": "pointer"}),
-    #             html.H5("Description of metrics", style={"display": "inline"}),
-    #             ]),
-    #             dbc.Collapse(
-    #                 dbc.Card([
-    #                     dbc.CardHeader("Explanation of Sentiment Metrics"),
-    #                     dbc.CardBody(
-    #                         dcc.Markdown("hello")
-    #                     )
-    #                 ]),
-    #                 id="collapse_5",
-    #                 is_open=False,
-    #             ),
-    #         ]),
-    #     ])
-    # ], style={"backgroundColor": personal_palette[4], "padding": "10px", "borderRadius": "15px",  "display": "inline-block", "width": "100%", 'margin': '10px'},) if language == 'english' else None,
-
-
     # html.Hr(),  # horizontal line
 
     # dash_table.DataTable(
@@ -567,31 +418,6 @@ def quick_parse():
         ]),
 
     html.Hr(),  # horizontal line
-
-    # dash_table.DataTable(
-    #     concat_df.to_dict('records'),
-    #     [{'name': i, 'id': i} for i in concat_df.columns],
-    #     style_cell={'textAlign': 'left'},
-    #     style_data={
-    #             'color': 'black',
-    #         'backgroundColor': 'white'
-    #     },
-    #     style_data_conditional=[
-    #             {
-    #                 'if': {'row_index': 'odd'},
-    #                 'backgroundColor': 'rgb(220, 220, 220)',
-    #                 }
-    #                 ],
-    #     style_header={
-    #             'backgroundColor': 'rgb(210, 210, 210)',
-    #             'color': 'black',
-    #             'fontWeight': 'bold'
-    #             }
-    # ),
-
-
-    # html.H2(children='Explanation of Metrics'),
-    # dcc.Markdown(explanation_text),
 ])
 
 @app.callback(
@@ -656,23 +482,6 @@ def toggle_collapse_5(n, is_open):
         return not is_open
     return is_open
 
-# @callback(Output('spinner-status', 'children'),
-#           Input('submit-val', 'n_clicks'),
-#           Input('intermediate-value', 'data'))
-# def spinner_func(clicks, data = None):
-#     if clicks > 0:
-#         if data != None:
-#             return print("hoops")
-#         else:
-#             return html.Div([html.P("Retrieving info about 1000s of papers, please give it a few seconds",
-#                                             style = {'order': '1', 'font-size': '1.5rem', 'color':'rgba(3, 3, 3, 0.2)',
-#                                                     'text-align': 'center', 'margin-top': '10vh'}),
-#                                     #html.Img(src='assets/spinner.gif', style= {'order':'2', 'margin': 'auto'})
-#                                     dbc.Spinner(size="sm"),
-#                                     ],
-#                                     style= {'display': 'flex', 'flex-direction':'column', 'justify-content': 'center',
-#                                             'align-items': 'center', 'min-height': '400px', 'width':'60vw', 'margin': 'auto'})
-
 if quick_mode == 1:
     @callback(Output('output-data-upload', 'children'),
               Output('intermediate-value', 'data'),
@@ -708,36 +517,33 @@ else:
 @callback(Output("page-content", "children"),
           Input("url", "pathname"),
           Input("intermediate-value", "data"),
-          Input('submit-val', 'n_clicks'))
-def render_page_content(pathname, data, n_clicks):
+          Input('submit-val', 'n_clicks'),
+          State('upload-data', 'contents'))
+def render_page_content(pathname, data, n_clicks, contents):
         
     if n_clicks > 0:
-        concat_df = pd.DataFrame.from_dict(data)
-        # use only specified rows from concat_df
-        style_df = concat_df[concat_df['Metric'].isin(['word_count', 'average_wordlen', 'msttr', 'average_sentlen', 'bzipr'])]
-        sent_df = concat_df[concat_df['Metric'].isin(['mean_sentiment', 'std_sentiment', 'mean_sentiment_first_ten_percent', 'mean_sentiment_last_ten_percent', 'difference_lastten_therest', 'arc_mean', 'arc_sd', 'mean_sentiment_per_segment_mean', 'mean_sentiment_per_segment_sd'])]
-        entropy_df = concat_df[concat_df['Metric'].isin(['word_entropy', 'bigram_entropy', 'approximate_entropy_value'])]
-        read_df = concat_df[concat_df['Metric'].isin(['flesch_grade', 'flesch_ease', 'smog', 'ari', 'dale_chall_new'])]
-        roget_df = concat_df[concat_df['Metric'].isin(['roget_n_tokens', 'roget_n_tokens_filtered', 'roget_n_cats'])]
+        if contents is not None:
+            concat_df = pd.DataFrame.from_dict(data)
 
-        # style_df = concat_df
-        # sent_df = concat_df
-        # entropy_df = concat_df
-        # read_df = concat_df
-        # roget_df = concat_df
+            # use only specified rows from concat_df
+            style_df = concat_df[concat_df['Metric'].isin(['word_count', 'average_wordlen', 'msttr', 'average_sentlen', 'bzipr'])]
+            sent_df = concat_df[concat_df['Metric'].isin(['mean_sentiment', 'std_sentiment', 'mean_sentiment_first_ten_percent', 'mean_sentiment_last_ten_percent', 'difference_lastten_therest', 'arc_mean', 'arc_sd', 'mean_sentiment_per_segment_mean', 'mean_sentiment_per_segment_sd'])]
+            entropy_df = concat_df[concat_df['Metric'].isin(['word_entropy', 'bigram_entropy', 'approximate_entropy_value'])]
+            read_df = concat_df[concat_df['Metric'].isin(['flesch_grade', 'flesch_ease', 'smog', 'ari', 'dale_chall_new'])]
+            roget_df = concat_df[concat_df['Metric'].isin(['roget_n_tokens', 'roget_n_tokens_filtered', 'roget_n_cats'])]
 
-        if pathname == "/":
-            return html.Div([html.P("Welcome to Fabula-NET", style = {'fontSize': 50, 'textAlign': 'center', 'margin': '10px'})])
-        elif pathname == "/styl":
-            return styl_func(style_df=style_df, stylometrics_explanation_text=stylometrics_explanation_text)
-        elif pathname == "/sent":
-            return sent_func(sent_df=sent_df, sentiment_explanation_text=sentiment_explanation_text)
-        elif pathname == "/entro":
-            return entro_func(entropy_df=entropy_df, entropy_explanation_text=entropy_explanation_text)
-        elif pathname == "/read":
-            return read_func(read_df=read_df, readability_explanation_text=readability_explanation_text)
-        elif pathname == "/roget":
-            return roget_func(roget_df=roget_df, roget_explanation_text=roget_explanation_text)
+            if pathname == "/":
+                return html.Div([html.P("Welcome to Fabula-NET", style = {'fontSize': 50, 'textAlign': 'center', 'margin': '10px'})])
+            elif pathname == "/styl":
+                return styl_func(style_df=style_df, stylometrics_explanation_text=stylometrics_explanation_text)
+            elif pathname == "/sent":
+                return sent_func(sent_df=sent_df, sentiment_explanation_text=sentiment_explanation_text)
+            elif pathname == "/entro":
+                return entro_func(entropy_df=entropy_df, entropy_explanation_text=entropy_explanation_text)
+            elif pathname == "/read":
+                return read_func(read_df=read_df, readability_explanation_text=readability_explanation_text)
+            elif pathname == "/roget":
+                return roget_func(roget_df=roget_df, roget_explanation_text=roget_explanation_text)
         # If the user tries to reach a different page, return a 404 message
         return html.Div(
             [
