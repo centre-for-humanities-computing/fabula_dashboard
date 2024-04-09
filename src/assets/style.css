@@ -1,5 +1,5 @@
 .button {
-    background-color: #04AA6D; /* Green */
+    background-color: #04AA6D;
     border: none;
     color: white;
     padding: 15px 32px;
@@ -10,12 +10,30 @@
   }
 
   .button:hover {
-    background-color: #06794f; /* Green */
+    background-color: #06794f; 
     color: white;
   }
 
   #submit-val {
-    margin-left: 20px; /* Adjust as needed */
+    margin-left: 20px;
     border-radius: 12px
 
+}
+
+.page-link:hover {
+  background-color: green;
+}
+
+.page-link:active {
+  background-color: green;
+}
+
+.nav-pills .nav-link.active {
+  color: #fff;
+  background-color: #04AA6D;
+}
+
+.nav-pills .nav-link{
+  color: #04AA6D;
+  margin: 0px 10px 0px 10px;
 }

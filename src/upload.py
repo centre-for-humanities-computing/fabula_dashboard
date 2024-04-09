@@ -15,6 +15,8 @@ from statistics import stdev
 
 from metrics_function import *
 
+quick_mode = 0
+
 load_figure_template("minty")
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -42,8 +44,8 @@ def create_fig(metric, metric_format, title_1, title_2):
     return fig
 
 def value_boxes(column_name: str, value_name: str, df: pd.DataFrame, color: str) -> dbc.Col:
-    print(df[df['Metric'] == column_name]['Value'].values[0].round(2))
-    print(df[df['Metric'] == column_name]['Mean'].values[0].round(2))
+    # print(df[df['Metric'] == column_name]['Value'].values[0].round(2))
+    # print(df[df['Metric'] == column_name]['Mean'].values[0].round(2))
     return dbc.Col([
         dbc.Card([
             dbc.CardBody([
@@ -68,17 +70,100 @@ def metrics_explanation(metric_group: str, explanation: str, id_but: str, id_col
             ], style = {'backgroundColor': palette_1[1], 'borderColor': 'black', 'padding': '10px'}), id=id_col, is_open=False),
         ])
 
+def styl_func(style_df: pd.DataFrame, stylometrics_explanation_text: str) -> html.Div:
+    return html.Div([
+        html.H2(children='Stylometrics', className="fw-bold text-white"),
+        dbc.Row([
+            value_boxes('word_count', 'Word Count', style_df, palette_1[2]),
+            value_boxes('average_wordlen', 'Word Length', style_df, palette_1[2]),
+        ], style={"marginTop": 10, "marginBottom": 10}),
+        dbc.Row([
+            value_boxes('msttr', 'MSTTR', style_df, palette_1[2]),
+            value_boxes('average_sentlen', 'Average Sentence Length', style_df, palette_1[2]),
+        ], style={"marginTop": 10, "marginBottom": 10}),
+        dbc.Row([
+            value_boxes('bzipr', 'bzipr', style_df, palette_1[2]),
+        ], style={"marginTop": 10, "marginBottom": 10}),
+        metrics_explanation('Stylometrics', stylometrics_explanation_text, "collapse-button_1", "collapse_1"),
+    ], style = {"backgroundColor": personal_palette[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"})
+
+def sent_func(sent_df: pd.DataFrame, sentiment_explanation_text: str) -> html.Div:
+    return html.Div([
+        html.H2(children='Sentiment', className="fw-bold text-white"),
+        dbc.Row([
+            value_boxes('mean_sentiment', 'Mean Sentiment', sent_df, palette_2[1]),
+            value_boxes('mean_sentiment_first_ten_percent', 'Mean Sentiment First 10%', sent_df, palette_2[1]),
+        ], style={"marginTop": 10, "marginBottom": 10}),
+        dbc.Row([
+            value_boxes('mean_sentiment_last_ten_percent', 'Mean Sentiment Last 10%', sent_df, palette_2[1]),
+            value_boxes('difference_lastten_therest', 'Difference between last 10 and the rest', sent_df, palette_2[1]),
+        ], style={"marginTop": 10, "marginBottom": 10}),
+        metrics_explanation('Sentiment', sentiment_explanation_text, "collapse-button_2", "collapse_2"),
+    ], style = {"backgroundColor": palette_2[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"})
+
+def entro_func(entropy_df: pd.DataFrame, entropy_explanation_text: str) -> html.Div:
+    return html.Div([
+        html.H2(children='Entropy', className="fw-bold text-white"),
+        dbc.Row([
+            value_boxes('word_entropy', 'Word Entropy', entropy_df, palette_3[1]),
+            value_boxes('bigram_entropy', 'Bigram Entropy', entropy_df, palette_3[1]),
+        ], style={"marginTop": 10, "marginBottom": 10}),
+        dbc.Row([
+            value_boxes('approximate_entropy_value', 'Approximate Entropy', entropy_df, palette_3[1]),
+        ], style={"marginTop": 10, "marginBottom": 10}),
+        metrics_explanation('Entropy', entropy_explanation_text, "collapse-button_3", "collapse_3"),
+    ], style = {"backgroundColor": palette_3[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"})
+
+def read_func(read_df: pd.DataFrame, readability_explanation_text: str) -> html.Div:
+    return html.Div([
+        html.H2(children='Readability', className="fw-bold text-white"),
+        dbc.Row([
+            value_boxes('flesch_grade', 'Flesch Grade', read_df, palette_4[1]),
+            value_boxes('flesch_ease', 'Flesch Ease', read_df, palette_4[1]),
+        ], style={"marginTop": 10, "marginBottom": 10}),
+        dbc.Row([
+            value_boxes('smog', 'Smog', read_df, palette_4[1]),
+            value_boxes('ari', 'Ari', read_df, palette_4[1]),
+        ], style={"marginTop": 10, "marginBottom": 10}),
+        dbc.Row([
+            value_boxes('dale_chall_new', 'Dale Chall New', read_df, palette_4[1]),
+        ], style={"marginTop": 10, "marginBottom": 10}),
+        metrics_explanation('Readability', readability_explanation_text, "collapse-button_4", "collapse_4"),
+    ], style = {"backgroundColor": palette_4[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"})
+
+def roget_func(roget_df: pd.DataFrame, roget_explanation_text: str) -> html.Div:
+    return html.Div([
+        html.H2(children='Roget', className="fw-bold text-white"),
+        dbc.Row([
+            value_boxes('roget_n_tokens', 'Roget n Tokens', roget_df, palette_5[1]),
+            value_boxes('roget_n_tokens_filtered', 'Roget Filtered', roget_df, palette_5[1]),
+        ], style={"marginTop": 10, "marginBottom": 10}),
+        dbc.Row([
+            value_boxes('roget_n_cats', 'Roget n Categories', roget_df, palette_5[1]),
+        ], style={"marginTop": 10, "marginBottom": 10}),
+        metrics_explanation('Roget', roget_explanation_text, "collapse-button_5", "collapse_5"),
+    ], style = {"backgroundColor": palette_5[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"})
+
 style_value_text = {'fontSize': 30, 'textAlign': 'center'}
 style_value_value = {"textAlign": "center", "fontSize": 30}
 style_value_figure = {'display': 'inline-block'}
 style_value_global = {'fontSize': 15, 'textAlign': 'center'}
 
 personal_palette = ['#5D5EDB', '#D353C2', '#FF5F98', '#FF8D6F', '#FFC45A', '#F9F871']
-palette_1 = ['#5D5EDB', '#7E79FA', '#9D94FF', '#BDB1FF', '#DDCFFF']  
-palette_2 = ['#920086', '#D353C2']
-palette_3 = ['#B20059', '#FF5F98']
-palette_4 = ['#A9432C', '#FF8D6F']
-palette_5 = ['#9C6D00', '#FFC45A']
+# palette_1 = ['#5D5EDB', '#7E79FA', '#9D94FF', '#BDB1FF', '#DDCFFF']  
+# palette_2 = ['#920086', '#D353C2']
+# palette_3 = ['#B20059', '#FF5F98']
+# palette_4 = ['#A9432C', '#FF8D6F']
+# palette_5 = ['#9C6D00', '#FFC45A']
+
+palette_chc = ["#084444","#40a49c", "#40bcb4", "#e8f4f4"]
+personal_palette = ["#40a49c", "#40bcb4", "#e8f4f4"]
+palette_1 = ["#40a49c", "#40bcb4", "#e8f4f4"]  
+palette_2 = ["#40a49c", "#e8f4f4"]
+palette_3 = ["#40a49c", "#e8f4f4"]
+palette_4 = ["#40a49c", "#e8f4f4"]
+palette_5 = ["#40a49c", "#e8f4f4"]
+
 
 # read in explanation filex
 with open('data/metrics_explanation.txt', 'r') as file:
@@ -162,12 +247,18 @@ main_content = html.Div(
     style = CONTENT_STYLE
 )
 
+page_content = html.Div(id='page-content', style = {'padding': '10px'})
+
 # app.layout = html.Div([
 #     html.Div([sidebar, main_content], className="row")
 # ], className="container-fluid", style={"height": "100vh"})
-app.layout = dbc.Container(
-    dbc.Row([dbc.Col(sidebar),
-             dbc.Col(main_content, width = {'size': 9, 'offset': 3})]),
+app.layout = dbc.Container([
+       dcc.Location(id="url"),
+       dbc.Row([dbc.Col(sidebar),
+             dbc.Col([
+                  dbc.Row(main_content),
+                  dbc.Row(page_content)
+                  ], width = {'size': 9, 'offset': 3})])],
     className="container-fluid", style={}, fluid = True)
 
 def parse_contents(contents, filename, date, language, sentiment, text):
@@ -247,81 +338,96 @@ def parse_contents(contents, filename, date, language, sentiment, text):
     roget_df = concat_df[concat_df['Metric'].isin(['roget_n_tokens', 'roget_n_tokens_filtered', 'roget_n_cats'])]
 
     return html.Div([
-        
+
+        dbc.Row([
+            html.Hr(),  # horizontal line
+
+            html.P(children=(full_string[:500])),
+
+            html.Hr(),  # horizontal line
+        ]),
+
+        dbc.Row([
+             dbc.Nav([
+                dbc.NavLink("Home", href="/", active="exact"),
+                dbc.NavLink("Stylometrics", href="/styl", active="exact"),
+                dbc.NavLink("Sentiment", href="/sent", active="exact"),
+                dbc.NavLink("Entropy", href="/entro", active="exact"),
+                dbc.NavLink("Readabnility", href="/read", active="exact"),
+                dbc.NavLink("Roget", href="/roget", active="exact"),
+             ], vertical=False, pills=True,)
+        ]),
+
         html.Hr(),  # horizontal line
 
-        html.P(children=(full_string[:500])),
+        # html.Div([
+        #     html.H2(children='Stylometrics', className="fw-bold text-white"),
+        #     dbc.Row([
+        #         value_boxes('word_count', 'Word Count', style_df, palette_1[2]),
+        #         value_boxes('average_wordlen', 'Word Length', style_df, palette_1[2]),
+        #     ], style={"marginTop": 10, "marginBottom": 10}),
+        #     dbc.Row([
+        #         value_boxes('msttr', 'MSTTR', style_df, palette_1[2]),
+        #         value_boxes('average_sentlen', 'Average Sentence Length', style_df, palette_1[2]),
+        #     ], style={"marginTop": 10, "marginBottom": 10}),
+        #     dbc.Row([
+        #         value_boxes('bzipr', 'bzipr', style_df, palette_1[2]),
+        #     ], style={"marginTop": 10, "marginBottom": 10}),
+        #     metrics_explanation('Stylometrics', stylometrics_explanation_text, "collapse-button_1", "collapse_1"),
+        # ], style = {"backgroundColor": personal_palette[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"}),
 
-        html.Hr(),  # horizontal line
+        # html.Div([
+        #     html.H2(children='Sentiment', className="fw-bold text-white"),
+        #     dbc.Row([
+        #         value_boxes('mean_sentiment', 'Mean Sentiment', sent_df, palette_2[1]),
+        #         value_boxes('mean_sentiment_first_ten_percent', 'Mean Sentiment First 10%', sent_df, palette_2[1]),
+        #     ], style={"marginTop": 10, "marginBottom": 10}),
+        #     dbc.Row([
+        #         value_boxes('mean_sentiment_last_ten_percent', 'Mean Sentiment Last 10%', sent_df, palette_2[1]),
+        #         value_boxes('difference_lastten_therest', 'Difference between last 10 and the rest', sent_df, palette_2[1]),
+        #     ], style={"marginTop": 10, "marginBottom": 10}),
+        #     metrics_explanation('Sentiment', sentiment_explanation_text, "collapse-button_2", "collapse_2"),
+        # ], style = {"backgroundColor": palette_2[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"}),
 
-        html.Div([
-            html.H2(children='Stylometrics', className="fw-bold text-white"),
-            dbc.Row([
-                value_boxes('word_count', 'Word Count', style_df, palette_1[2]),
-                value_boxes('average_wordlen', 'Word Length', style_df, palette_1[2]),
-            ], style={"marginTop": 10, "marginBottom": 10}),
-            dbc.Row([
-                value_boxes('msttr', 'MSTTR', style_df, palette_1[2]),
-                value_boxes('average_sentlen', 'Average Sentence Length', style_df, palette_1[2]),
-            ], style={"marginTop": 10, "marginBottom": 10}),
-            dbc.Row([
-                value_boxes('bzipr', 'bzipr', style_df, palette_1[2]),
-            ], style={"marginTop": 10, "marginBottom": 10}),
-            metrics_explanation('Stylometrics', stylometrics_explanation_text, "collapse-button_1", "collapse_1"),
-        ], style = {"backgroundColor": personal_palette[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"}),
+        # html.Div([
+        #     html.H2(children='Entropy', className="fw-bold text-white"),
+        #     dbc.Row([
+        #         value_boxes('word_entropy', 'Word Entropy', entropy_df, palette_3[1]),
+        #         value_boxes('bigram_entropy', 'Bigram Entropy', entropy_df, palette_3[1]),
+        #     ], style={"marginTop": 10, "marginBottom": 10}),
+        #     dbc.Row([
+        #         value_boxes('approximate_entropy_value', 'Approximate Entropy', entropy_df, palette_3[1]),
+        #     ], style={"marginTop": 10, "marginBottom": 10}),
+        #     metrics_explanation('Entropy', entropy_explanation_text, "collapse-button_3", "collapse_3"),
+        # ], style = {"backgroundColor": palette_3[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"}),
 
-        html.Div([
-            html.H2(children='Sentiment', className="fw-bold text-white"),
-            dbc.Row([
-                value_boxes('mean_sentiment', 'Mean Sentiment', sent_df, palette_2[1]),
-                value_boxes('mean_sentiment_first_ten_percent', 'Mean Sentiment First 10%', sent_df, palette_2[1]),
-            ], style={"marginTop": 10, "marginBottom": 10}),
-            dbc.Row([
-                value_boxes('mean_sentiment_last_ten_percent', 'Mean Sentiment Last 10%', sent_df, palette_2[1]),
-                value_boxes('difference_lastten_therest', 'Difference between last 10 and the rest', sent_df, palette_2[1]),
-            ], style={"marginTop": 10, "marginBottom": 10}),
-            metrics_explanation('Sentiment', sentiment_explanation_text, "collapse-button_2", "collapse_2"),
-        ], style = {"backgroundColor": palette_2[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"}),
+        # html.Div([
+        #     html.H2(children='Readability', className="fw-bold text-white"),
+        #     dbc.Row([
+        #         value_boxes('flesch_grade', 'Flesch Grade', read_df, palette_4[1]),
+        #         value_boxes('flesch_ease', 'Flesch Ease', read_df, palette_4[1]),
+        #     ], style={"marginTop": 10, "marginBottom": 10}),
+        #     dbc.Row([
+        #         value_boxes('smog', 'Smog', read_df, palette_4[1]),
+        #         value_boxes('ari', 'Ari', read_df, palette_4[1]),
+        #     ], style={"marginTop": 10, "marginBottom": 10}),
+        #     dbc.Row([
+        #         value_boxes('dale_chall_new', 'Dale Chall New', read_df, palette_4[1]),
+        #     ], style={"marginTop": 10, "marginBottom": 10}),
+        #     metrics_explanation('Readability', readability_explanation_text, "collapse-button_4", "collapse_4"),
+        # ], style = {"backgroundColor": palette_4[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"}),
 
-        html.Div([
-            html.H2(children='Entropy', className="fw-bold text-white"),
-            dbc.Row([
-                value_boxes('word_entropy', 'Word Entropy', entropy_df, palette_3[1]),
-                value_boxes('bigram_entropy', 'Bigram Entropy', entropy_df, palette_3[1]),
-            ], style={"marginTop": 10, "marginBottom": 10}),
-            dbc.Row([
-                value_boxes('approximate_entropy_value', 'Approximate Entropy', entropy_df, palette_3[1]),
-            ], style={"marginTop": 10, "marginBottom": 10}),
-            metrics_explanation('Entropy', entropy_explanation_text, "collapse-button_3", "collapse_3"),
-        ], style = {"backgroundColor": palette_3[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"}),
-
-        html.Div([
-            html.H2(children='Readability', className="fw-bold text-white"),
-            dbc.Row([
-                value_boxes('flesch_grade', 'Flesch Grade', read_df, palette_4[1]),
-                value_boxes('flesch_ease', 'Flesch Ease', read_df, palette_4[1]),
-            ], style={"marginTop": 10, "marginBottom": 10}),
-            dbc.Row([
-                value_boxes('smog', 'Smog', read_df, palette_4[1]),
-                value_boxes('ari', 'Ari', read_df, palette_4[1]),
-            ], style={"marginTop": 10, "marginBottom": 10}),
-            dbc.Row([
-                value_boxes('dale_chall_new', 'Dale Chall New', read_df, palette_4[1]),
-            ], style={"marginTop": 10, "marginBottom": 10}),
-            metrics_explanation('Readability', readability_explanation_text, "collapse-button_4", "collapse_4"),
-        ], style = {"backgroundColor": palette_4[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"}),
-
-        html.Div([
-            html.H2(children='Roget', className="fw-bold text-white"),
-            dbc.Row([
-                value_boxes('roget_n_tokens', 'Roget n Tokens', roget_df, palette_5[1]),
-                value_boxes('roget_n_tokens_filtered', 'Roget Filtered', roget_df, palette_5[1]),
-            ], style={"marginTop": 10, "marginBottom": 10}),
-            dbc.Row([
-                value_boxes('roget_n_cats', 'Roget n Categories', roget_df, palette_5[1]),
-            ], style={"marginTop": 10, "marginBottom": 10}),
-            metrics_explanation('Roget', roget_explanation_text, "collapse-button_5", "collapse_5"),
-        ], style = {"backgroundColor": palette_5[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"}),
+        # html.Div([
+        #     html.H2(children='Roget', className="fw-bold text-white"),
+        #     dbc.Row([
+        #         value_boxes('roget_n_tokens', 'Roget n Tokens', roget_df, palette_5[1]),
+        #         value_boxes('roget_n_tokens_filtered', 'Roget Filtered', roget_df, palette_5[1]),
+        #     ], style={"marginTop": 10, "marginBottom": 10}),
+        #     dbc.Row([
+        #         value_boxes('roget_n_cats', 'Roget n Categories', roget_df, palette_5[1]),
+        #     ], style={"marginTop": 10, "marginBottom": 10}),
+        #     metrics_explanation('Roget', roget_explanation_text, "collapse-button_5", "collapse_5"),
+        # ], style = {"backgroundColor": palette_5[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"}),
 
     # html.Div([
     #     html.H2(children='Sentiment'),
@@ -401,32 +507,91 @@ def parse_contents(contents, filename, date, language, sentiment, text):
     # ], style={"backgroundColor": personal_palette[4], "padding": "10px", "borderRadius": "15px",  "display": "inline-block", "width": "100%", 'margin': '10px'},) if language == 'english' else None,
 
 
+    # html.Hr(),  # horizontal line
+
+    # dash_table.DataTable(
+    #     concat_df.to_dict('records'),
+    #     [{'name': i, 'id': i} for i in concat_df.columns],
+    #     style_cell={'textAlign': 'left'},
+    #     style_data={
+    #             'color': 'black',
+    #         'backgroundColor': 'white'
+    #     },
+    #     style_data_conditional=[
+    #             {
+    #                 'if': {'row_index': 'odd'},
+    #                 'backgroundColor': 'rgb(220, 220, 220)',
+    #                 }
+    #                 ],
+    #     style_header={
+    #             'backgroundColor': 'rgb(210, 210, 210)',
+    #             'color': 'black',
+    #             'fontWeight': 'bold'
+    #             }
+    # ),
+
+
+    # html.H2(children='Explanation of Metrics'),
+    # dcc.Markdown(explanation_text),
+])
+
+def quick_parse():
+
+    # read csv
+    concat_df = pd.read_csv('data/output.csv')
+
+    # use only specified rows from concat_df
+    style_df = concat_df[concat_df['Metric'].isin(['word_count', 'average_wordlen', 'msttr', 'average_sentlen', 'bzipr'])]
+    sent_df = concat_df[concat_df['Metric'].isin(['mean_sentiment', 'std_sentiment', 'mean_sentiment_first_ten_percent', 'mean_sentiment_last_ten_percent', 'difference_lastten_therest', 'arc_mean', 'arc_sd', 'mean_sentiment_per_segment_mean', 'mean_sentiment_per_segment_sd'])]
+    entropy_df = concat_df[concat_df['Metric'].isin(['word_entropy', 'bigram_entropy', 'approximate_entropy_value'])]
+    read_df = concat_df[concat_df['Metric'].isin(['flesch_grade', 'flesch_ease', 'smog', 'ari', 'dale_chall_new'])]
+    roget_df = concat_df[concat_df['Metric'].isin(['roget_n_tokens', 'roget_n_tokens_filtered', 'roget_n_cats'])]
+
+    return html.Div([
+        
+        dbc.Row([
+            html.Hr(),  # horizontal line
+
+            html.Hr(),  # horizontal line
+        ]),
+
+        dbc.Row([
+             dbc.Nav([
+                dbc.NavLink("Home", href="/", active="exact"),
+                dbc.NavLink("Stylometrics", href="/styl", active="exact"),
+                dbc.NavLink("Sentiment", href="/sent", active="exact"),
+                dbc.NavLink("Entropy", href="/entro", active="exact"),
+                dbc.NavLink("Readabnility", href="/read", active="exact"),
+                dbc.NavLink("Roget", href="/roget", active="exact"),
+             ], vertical=False, pills=True)
+        ]),
+
     html.Hr(),  # horizontal line
 
-    dash_table.DataTable(
-        concat_df.to_dict('records'),
-        [{'name': i, 'id': i} for i in concat_df.columns],
-        style_cell={'textAlign': 'left'},
-        style_data={
-                'color': 'black',
-            'backgroundColor': 'white'
-        },
-        style_data_conditional=[
-                {
-                    'if': {'row_index': 'odd'},
-                    'backgroundColor': 'rgb(220, 220, 220)',
-                    }
-                    ],
-        style_header={
-                'backgroundColor': 'rgb(210, 210, 210)',
-                'color': 'black',
-                'fontWeight': 'bold'
-                }
-    ),
+    # dash_table.DataTable(
+    #     concat_df.to_dict('records'),
+    #     [{'name': i, 'id': i} for i in concat_df.columns],
+    #     style_cell={'textAlign': 'left'},
+    #     style_data={
+    #             'color': 'black',
+    #         'backgroundColor': 'white'
+    #     },
+    #     style_data_conditional=[
+    #             {
+    #                 'if': {'row_index': 'odd'},
+    #                 'backgroundColor': 'rgb(220, 220, 220)',
+    #                 }
+    #                 ],
+    #     style_header={
+    #             'backgroundColor': 'rgb(210, 210, 210)',
+    #             'color': 'black',
+    #             'fontWeight': 'bold'
+    #             }
+    # ),
 
 
-    html.H2(children='Explanation of Metrics'),
-    dcc.Markdown(explanation_text),
+    # html.H2(children='Explanation of Metrics'),
+    # dcc.Markdown(explanation_text),
 ])
 
 @app.callback(
@@ -508,29 +673,80 @@ def toggle_collapse_5(n, is_open):
 #                                     style= {'display': 'flex', 'flex-direction':'column', 'justify-content': 'center',
 #                                             'align-items': 'center', 'min-height': '400px', 'width':'60vw', 'margin': 'auto'})
 
-
-@callback(Output('output-data-upload', 'children'),
-              State('upload-data', 'contents'),
-              State('upload-data', 'filename'),
-              State('upload-data', 'last_modified'),
-              State('lang-dropdown', 'value'),
-              State('sent-dropdown', 'value'),
-              State('textarea-example', 'value'),
+if quick_mode == 1:
+    @callback(Output('output-data-upload', 'children'),
+              Output('intermediate-value', 'data'),
               Input('submit-val', 'n_clicks'),
               prevent_initial_call=True)
-def update_output(list_of_contents, list_of_names, list_of_dates, language, sentiment, text, n_clicks):
-    if n_clicks > 0:
-        if list_of_contents is not None:
-            children = [
-                parse_contents(c, n, d, language, sentiment, text) for c, n, d in
-                zip(list_of_contents, list_of_names, list_of_dates)]
+    def update_output(n_clicks):
+        return quick_parse(), pd.read_csv('data/output.csv').to_dict()
+else:
+    @callback(Output('output-data-upload', 'children'),
+              Output('intermediate-value', 'data'),
+                State('upload-data', 'contents'),
+                State('upload-data', 'filename'),
+                State('upload-data', 'last_modified'),
+                State('lang-dropdown', 'value'),
+                State('sent-dropdown', 'value'),
+                State('textarea-example', 'value'),
+                Input('submit-val', 'n_clicks'),
+                prevent_initial_call=True)
+    def update_output(list_of_contents, list_of_names, list_of_dates, language, sentiment, text, n_clicks):
+        if n_clicks > 0:
+            if list_of_contents is not None:
+                children = [
+                    parse_contents(c, n, d, language, sentiment, text) for c, n, d in
+                    zip(list_of_contents, list_of_names, list_of_dates)]
 
-            return children
+                return children, pd.read_csv('data/output.csv').to_dict()
+            
+            if text is not None:
+                children = parse_contents(text, list_of_names, list_of_dates, language, sentiment, text)
+
+                return children
+
+@callback(Output("page-content", "children"),
+          Input("url", "pathname"),
+          Input("intermediate-value", "data"),
+          Input('submit-val', 'n_clicks'))
+def render_page_content(pathname, data, n_clicks):
         
-        if text is not None:
-            children = parse_contents(text, list_of_names, list_of_dates, language, sentiment, text)
+    if n_clicks > 0:
+        concat_df = pd.DataFrame.from_dict(data)
+        # use only specified rows from concat_df
+        style_df = concat_df[concat_df['Metric'].isin(['word_count', 'average_wordlen', 'msttr', 'average_sentlen', 'bzipr'])]
+        sent_df = concat_df[concat_df['Metric'].isin(['mean_sentiment', 'std_sentiment', 'mean_sentiment_first_ten_percent', 'mean_sentiment_last_ten_percent', 'difference_lastten_therest', 'arc_mean', 'arc_sd', 'mean_sentiment_per_segment_mean', 'mean_sentiment_per_segment_sd'])]
+        entropy_df = concat_df[concat_df['Metric'].isin(['word_entropy', 'bigram_entropy', 'approximate_entropy_value'])]
+        read_df = concat_df[concat_df['Metric'].isin(['flesch_grade', 'flesch_ease', 'smog', 'ari', 'dale_chall_new'])]
+        roget_df = concat_df[concat_df['Metric'].isin(['roget_n_tokens', 'roget_n_tokens_filtered', 'roget_n_cats'])]
 
-            return children
+        # style_df = concat_df
+        # sent_df = concat_df
+        # entropy_df = concat_df
+        # read_df = concat_df
+        # roget_df = concat_df
+
+        if pathname == "/":
+            return html.Div([html.P("Welcome to Fabula-NET", style = {'fontSize': 50, 'textAlign': 'center', 'margin': '10px'})])
+        elif pathname == "/styl":
+            return styl_func(style_df=style_df, stylometrics_explanation_text=stylometrics_explanation_text)
+        elif pathname == "/sent":
+            return sent_func(sent_df=sent_df, sentiment_explanation_text=sentiment_explanation_text)
+        elif pathname == "/entro":
+            return entro_func(entropy_df=entropy_df, entropy_explanation_text=entropy_explanation_text)
+        elif pathname == "/read":
+            return read_func(read_df=read_df, readability_explanation_text=readability_explanation_text)
+        elif pathname == "/roget":
+            return roget_func(roget_df=roget_df, roget_explanation_text=roget_explanation_text)
+        # If the user tries to reach a different page, return a 404 message
+        return html.Div(
+            [
+                html.H1("404: Not found", className="text-danger"),
+                html.Hr(),
+                html.P(f"The pathname {pathname} was not recognised..."),
+            ],
+            className="p-3 bg-light rounded-3",
+        )
 
 # @callback(Output('output-data-upload', 'children'),
 #           Input('intermediate-value', 'data'))
