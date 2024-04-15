@@ -164,20 +164,22 @@ palette_5 = ["#40a49c", "#e8f4f4"]
 
 
 # read in explanation filex
-with open('data/metrics_explanation.txt', 'r') as file:
+with open('src/assets/texts/metrics_explanation.txt', 'r') as file:
             explanation_text = file.read()
 
 # read in explanation filex
-with open('data/stylometrics_explanations.txt', 'r') as file:
+with open('src/assets/texts/stylometrics_explanations.txt', 'r') as file:
             stylometrics_explanation_text = file.read()
-with open('data/sentiment_explanations.txt', 'r') as file:
+with open('src/assets/texts/sentiment_explanations.txt', 'r') as file:
             sentiment_explanation_text = file.read()
-with open('data/entropy_explanations.txt', 'r') as file:
+with open('src/assets/texts/entropy_explanations.txt', 'r') as file:
             entropy_explanation_text = file.read()
-with open('data/readability_explanations.txt', 'r') as file:
+with open('src/assets/texts/readability_explanations.txt', 'r') as file:
             readability_explanation_text = file.read()
-with open('data/roget_explanations.txt', 'r') as file:
+with open('src/assets/texts/roget_explanations.txt', 'r') as file:
             roget_explanation_text = file.read()
+with open('src/assets/texts/home_page.txt', 'r') as file:
+            home_page_text = file.read()
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP],suppress_callback_exceptions=True)
 
@@ -239,7 +241,14 @@ main_content = html.Div(
     children = [
         #html.Div(id='output-data-upload'),
         # dcc.Store stores the intermediate value
-        dcc.Loading(id = 'loading-1', type = 'cube', children = [html.Div(id='output-data-upload')], fullscreen = False, style = {'position': 'fixed', 'top': '50%', 'left': '62.5%', 'transform': 'translate(-50%, -50%)'}, color = 'green'),
+        dcc.Loading(id = 'loading-1', type = 'cube', children = [
+             dbc.Row([
+                html.Hr(style = {'margin': '10px'}),  # horizontal line
+                dbc.Nav([
+                    dbc.NavLink("Home", href="/", active="exact"),
+                ], vertical=False, pills=True,),
+                html.Hr(style = {'margin': '10px'}),  # horizontal line
+            ], id = 'output-data-upload'),], fullscreen = False, style = {'position': 'fixed', 'top': '50%', 'left': '62.5%', 'transform': 'translate(-50%, -50%)'}, color = 'green'),
         dcc.Store(id='intermediate-value'),
     ],
     style = CONTENT_STYLE
@@ -338,14 +347,7 @@ def parse_contents(contents, filename, date, language, sentiment, text):
     return html.Div([
 
         dbc.Row([
-            html.Hr(),  # horizontal line
-
-            html.P(children=(full_string[:500])),
-
-            html.Hr(),  # horizontal line
-        ]),
-
-        dbc.Row([
+             html.Hr(style = {'margin': '10px'}),  # horizontal line
              dbc.Nav([
                 dbc.NavLink("Home", href="/", active="exact"),
                 dbc.NavLink("Stylometrics", href="/styl", active="exact"),
@@ -353,10 +355,16 @@ def parse_contents(contents, filename, date, language, sentiment, text):
                 dbc.NavLink("Entropy", href="/entro", active="exact"),
                 dbc.NavLink("Readabnility", href="/read", active="exact"),
                 dbc.NavLink("Roget", href="/roget", active="exact"),
-             ], vertical=False, pills=True,)
+             ], vertical=False, pills=True,),
+             html.Hr(style = {'margin': '10px'}),  # horizontal line
         ]),
 
-        html.Hr(),  # horizontal line
+        dbc.Row([
+   
+            html.P(children=(full_string[:500])),
+
+            html.Hr(),  # horizontal line
+        ]),
 
     # html.Hr(),  # horizontal line
 
@@ -384,7 +392,7 @@ def parse_contents(contents, filename, date, language, sentiment, text):
 
     # html.H2(children='Explanation of Metrics'),
     # dcc.Markdown(explanation_text),
-])
+]), concat_df.to_dict()
 
 def quick_parse():
 
@@ -503,16 +511,14 @@ else:
     def update_output(list_of_contents, list_of_names, list_of_dates, language, sentiment, text, n_clicks):
         if n_clicks > 0:
             if list_of_contents is not None:
-                children = [
-                    parse_contents(c, n, d, language, sentiment, text) for c, n, d in
-                    zip(list_of_contents, list_of_names, list_of_dates)]
+                children, data = parse_contents(list_of_contents[0], list_of_names[0], list_of_dates[0], language, sentiment, text)
 
-                return children, pd.read_csv('data/output.csv').to_dict()
+                return children, data
             
-            if text is not None:
-                children = parse_contents(text, list_of_names, list_of_dates, language, sentiment, text)
+            # if text is not None:
+            #     children = parse_contents(text, list_of_names[0], list_of_dates[0], language, sentiment, text)
 
-                return children
+            #     return children
 
 @callback(Output("page-content", "children"),
           Input("url", "pathname"),
@@ -533,7 +539,9 @@ def render_page_content(pathname, data, n_clicks, contents):
             roget_df = concat_df[concat_df['Metric'].isin(['roget_n_tokens', 'roget_n_tokens_filtered', 'roget_n_cats'])]
 
             if pathname == "/":
-                return html.Div([html.P("Welcome to Fabula-NET", style = {'fontSize': 50, 'textAlign': 'center', 'margin': '10px'})])
+                return html.Div([
+                     html.P("Welcome to Fabula-NET", style = {'fontSize': 50, 'textAlign': 'center', 'margin': '10px'}),
+                     html.P(dcc.Markdown(home_page_text), style = {'fontSize': 20, 'textAlign': 'center', 'margin': '10px'}),])
             elif pathname == "/styl":
                 return styl_func(style_df=style_df, stylometrics_explanation_text=stylometrics_explanation_text)
             elif pathname == "/sent":
@@ -553,6 +561,10 @@ def render_page_content(pathname, data, n_clicks, contents):
             ],
             className="p-3 bg-light rounded-3",
         )
+    elif pathname == "/":
+        return html.Div([
+            html.P("Welcome to Fabula-NET", style = {'fontSize': 50, 'textAlign': 'center', 'margin': '10px'}),
+            html.P(dcc.Markdown(home_page_text), style = {'fontSize': 20, 'textAlign': 'center', 'margin': '10px'}),])
 
 # @callback(Output('output-data-upload', 'children'),
 #           Input('intermediate-value', 'data'))

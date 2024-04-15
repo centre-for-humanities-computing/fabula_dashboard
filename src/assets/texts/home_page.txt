@@ -1,0 +1,6 @@
+This site lets you evaluate a text on a large number of metrics and compare these to 
+a large corpus of canonical texts identified and analysed by Fabula-NET. 
+
+The following are relevant articles on this topic authored by Fabula-NET:
+
+**Bizzoni & Feldkamp (2024)**: Below the Sea (with the Sharks): Probing Textual Features of Implicit Sentiment in a Literary Case-study. 
