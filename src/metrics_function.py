@@ -49,7 +49,8 @@ def compute_metrics(text:str, lang:str, sentiment_method:str) -> dict:
 
     # for sentences
     print("processing sentences")
-    if len(sents) < 1502:
+    # if len(sents) < 1502:
+    if len(sents) < 1:
         print("text not long enough for stylometrics\n")
 
     else:
@@ -74,18 +75,30 @@ def compute_metrics(text:str, lang:str, sentiment_method:str) -> dict:
 
     # basic sentiment features
     print("processing basic sentiment features")
-    if len(arc) < 60:
-        print("arc not long enough for basic sentiment features\n")
-
+    # if len(arc) < 60:
+    # if len(arc) < 0:
+    #     print("arc not long enough for basic sentiment features\n")
+    if len(arc) < 2:
+        (output["mean_sentiment"]) = get_basic_sentarc_features(arc, len(sents))
+    elif len(arc) < 10:
+        (output["mean_sentiment"], output["std_sentiment"]) = get_basic_sentarc_features(arc, len(sents))
+    elif len(arc) < 20:
+        (
+            output["mean_sentiment"],
+            output["std_sentiment"],
+            output["mean_sentiment_first_ten_percent"],
+            output["mean_sentiment_last_ten_percent"],
+            output["difference_lastten_therest"],
+        ) = get_basic_sentarc_features(arc, len(sents))
     else:
         (
             output["mean_sentiment"],
             output["std_sentiment"],
-            output["mean_sentiment_per_segment"],
             output["mean_sentiment_first_ten_percent"],
             output["mean_sentiment_last_ten_percent"],
             output["difference_lastten_therest"],
-        ) = get_basic_sentarc_features(arc)
+            output["mean_sentiment_per_segment"],
+        ) = get_basic_sentarc_features(arc, len(sents))
 
     # approximate entropy
     print("processing approximate entropy")

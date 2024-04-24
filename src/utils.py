@@ -270,35 +270,54 @@ def get_segment_sentmeans(arc: list[float]) -> list[float]:
     return segment_means
 
 
-def get_basic_sentarc_features(arc: list[float]):
+def get_basic_sentarc_features(arc: list[float], length: int):
     """
     calculates basic features of the sentiment arc.
     """
     # basic features
-    mean_sent = np.mean(arc)
-    std_sent = np.std(arc)
+    if length < 2:
+        mean_sent = np.mean(arc)
+        return mean_sent
+    elif length < 10:
+        mean_sent = np.mean(arc)
+        std_sent = np.std(arc)
+        return (mean_sent, std_sent)
+    elif length < 20:
+        mean_sent = np.mean(arc)
+        std_sent = np.std(arc)
+        # mean of first 10%, mean of last 10%
+        n_ten_items = len(arc) // 10
 
-    # split into 20 segments and get mean for each segment
-    segment_means = get_segment_sentmeans(arc)
+        mean_first_ten = np.mean(arc[:n_ten_items])
+        mean_end_ten = np.mean(arc[-n_ten_items:])
 
-    # mean of first 10%, mean of last 10%
-    n_ten_items = len(arc) // 10
+        # difference between end 10% and the rest
+        mean_rest = np.mean(arc[:-n_ten_items])
+        diff_end_rest = mean_rest - mean_end_ten
 
-    mean_first_ten = np.mean(arc[:n_ten_items])
-    mean_end_ten = np.mean(arc[-n_ten_items:])
+        return (mean_sent, std_sent, mean_first_ten, mean_end_ten, diff_end_rest)
+    else:
+        mean_sent = np.mean(arc)
+        std_sent = np.std(arc)
+        # mean of first 10%, mean of last 10%
+        n_ten_items = len(arc) // 10
 
-    # difference between end 10% and the rest
-    mean_rest = np.mean(arc[:-n_ten_items])
-    diff_end_rest = mean_rest - mean_end_ten
+        mean_first_ten = np.mean(arc[:n_ten_items])
+        mean_end_ten = np.mean(arc[-n_ten_items:])
 
-    return (
-        mean_sent,
-        std_sent,
-        segment_means,
-        mean_first_ten,
-        mean_end_ten,
-        diff_end_rest,
-    )
+        # difference between end 10% and the rest
+        mean_rest = np.mean(arc[:-n_ten_items])
+        diff_end_rest = mean_rest - mean_end_ten
+        segment_means = get_segment_sentmeans(arc)
+
+        return (
+            mean_sent,
+            std_sent,
+            mean_first_ten,
+            mean_end_ten,
+            diff_end_rest,
+            segment_means,
+        )
 
 def integrate(x: list[float]) -> np.matrix:
     return np.mat(np.cumsum(x) - np.mean(x))

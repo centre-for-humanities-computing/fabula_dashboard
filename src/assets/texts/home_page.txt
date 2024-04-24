@@ -1,5 +1,7 @@
-This site lets you evaluate a text on a large number of metrics and compare these to 
+This web-app lets you uplaod a text, calculate a large number of text metrics and compare these to 
 a large corpus of canonical texts identified and analysed by Fabula-NET. 
+
+Fabula-NET is a research project investigating...
 
 The following are relevant articles on this topic authored by Fabula-NET:
 
