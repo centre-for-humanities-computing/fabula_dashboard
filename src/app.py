@@ -694,4 +694,4 @@ def render_page_content(pathname, data, n_clicks, contents, text, language, sent
             
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')
