@@ -18,3 +18,4 @@ dash_bootstrap_components
 dash-iconify
 gunicorn
 dash-tools
+dash_bootstrap_templates
