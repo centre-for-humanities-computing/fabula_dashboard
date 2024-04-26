@@ -8,6 +8,7 @@ from dash_iconify import DashIconify
 import base64
 import datetime
 import io
+import os
 
 import pandas as pd
 from statistics import mean 
@@ -22,7 +23,7 @@ load_figure_template("minty")
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 # read in mean file
-mean_df = pd.read_csv('data/mean.csv')
+mean_df = pd.read_csv(os.path.join('data', 'mean.csv'))
 
 def create_fig(metric, metric_format, title_1, title_2):
     #Add indicator
@@ -186,21 +187,21 @@ palette_5 = ["#40a49c", "#e8f4f4"]
 
 
 # read in explanation filex
-with open('src/assets/texts/metrics_explanation.txt', 'r') as file:
+with open(os.path.join('src', 'assets', 'texts', 'metrics_explanation.txt'), 'r') as file:
             explanation_text = file.read()
 
 # read in explanation filex
-with open('src/assets/texts/stylometrics_explanations.txt', 'r') as file:
+with open(os.path.join('src', 'assets', 'texts', 'stylometrics_explanations.txt'), 'r') as file:
             stylometrics_explanation_text = file.read()
-with open('src/assets/texts/sentiment_explanations.txt', 'r') as file:
+with open(os.path.join('src', 'assets', 'texts', 'sentiment_explanations.txt'), 'r') as file:
             sentiment_explanation_text = file.read()
-with open('src/assets/texts/entropy_explanations.txt', 'r') as file:
+with open(os.path.join('src', 'assets', 'texts', 'entropy_explanations.txt'), 'r') as file:
             entropy_explanation_text = file.read()
-with open('src/assets/texts/readability_explanations.txt', 'r') as file:
+with open(os.path.join('src', 'assets', 'texts', 'readability_explanations.txt'), 'r') as file:
             readability_explanation_text = file.read()
-with open('src/assets/texts/roget_explanations.txt', 'r') as file:
+with open(os.path.join('src', 'assets', 'texts', 'roget_explanations.txt'), 'r') as file:
             roget_explanation_text = file.read()
-with open('src/assets/texts/home_page.txt', 'r') as file:
+with open(os.path.join('src', 'assets', 'texts', 'home_page.txt'), 'r') as file:
             home_page_text = file.read()
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP],suppress_callback_exceptions=True)
@@ -407,39 +408,39 @@ def parse_contents(contents, filename, date, language, sentiment, text, fileorte
 
     return navbar, concat_df.to_dict(), full_string
 
-def quick_parse():
+# def quick_parse():
 
-    # read csv
-    concat_df = pd.read_csv('data/output.csv')
+#     # read csv
+#     concat_df = pd.read_csv('data/output.csv')
 
-    # use only specified rows from concat_df
-    style_df = concat_df[concat_df['Metric'].isin(['word_count', 'average_wordlen', 'msttr', 'average_sentlen', 'bzipr'])]
-    sent_df = concat_df[concat_df['Metric'].isin(['mean_sentiment', 'std_sentiment', 'mean_sentiment_first_ten_percent', 'mean_sentiment_last_ten_percent', 'difference_lastten_therest', 'arc_mean', 'arc_sd', 'mean_sentiment_per_segment_mean', 'mean_sentiment_per_segment_sd'])]
-    entropy_df = concat_df[concat_df['Metric'].isin(['word_entropy', 'bigram_entropy', 'approximate_entropy_value'])]
-    read_df = concat_df[concat_df['Metric'].isin(['flesch_grade', 'flesch_ease', 'smog', 'ari', 'dale_chall_new'])]
-    roget_df = concat_df[concat_df['Metric'].isin(['roget_n_tokens', 'roget_n_tokens_filtered', 'roget_n_cats'])]
+#     # use only specified rows from concat_df
+#     style_df = concat_df[concat_df['Metric'].isin(['word_count', 'average_wordlen', 'msttr', 'average_sentlen', 'bzipr'])]
+#     sent_df = concat_df[concat_df['Metric'].isin(['mean_sentiment', 'std_sentiment', 'mean_sentiment_first_ten_percent', 'mean_sentiment_last_ten_percent', 'difference_lastten_therest', 'arc_mean', 'arc_sd', 'mean_sentiment_per_segment_mean', 'mean_sentiment_per_segment_sd'])]
+#     entropy_df = concat_df[concat_df['Metric'].isin(['word_entropy', 'bigram_entropy', 'approximate_entropy_value'])]
+#     read_df = concat_df[concat_df['Metric'].isin(['flesch_grade', 'flesch_ease', 'smog', 'ari', 'dale_chall_new'])]
+#     roget_df = concat_df[concat_df['Metric'].isin(['roget_n_tokens', 'roget_n_tokens_filtered', 'roget_n_cats'])]
 
-    return html.Div([
+#     return html.Div([
         
-        dbc.Row([
-            html.Hr(),  # horizontal line
+#         dbc.Row([
+#             html.Hr(),  # horizontal line
 
-            html.Hr(),  # horizontal line
-        ]),
+#             html.Hr(),  # horizontal line
+#         ]),
 
-        dbc.Row([
-             dbc.Nav([
-                dbc.NavLink("Home", href="/", active="exact"),
-                dbc.NavLink("Stylometrics", href="/styl", active="exact"),
-                dbc.NavLink("Sentiment", href="/sent", active="exact"),
-                dbc.NavLink("Entropy", href="/entro", active="exact"),
-                dbc.NavLink("Readabnility", href="/read", active="exact"),
-                dbc.NavLink("Roget", href="/roget", active="exact"),
-             ], vertical=False, pills=True)
-        ]),
+#         dbc.Row([
+#              dbc.Nav([
+#                 dbc.NavLink("Home", href="/", active="exact"),
+#                 dbc.NavLink("Stylometrics", href="/styl", active="exact"),
+#                 dbc.NavLink("Sentiment", href="/sent", active="exact"),
+#                 dbc.NavLink("Entropy", href="/entro", active="exact"),
+#                 dbc.NavLink("Readabnility", href="/read", active="exact"),
+#                 dbc.NavLink("Roget", href="/roget", active="exact"),
+#              ], vertical=False, pills=True)
+#         ]),
 
-    html.Hr(),  # horizontal line
-])
+#     html.Hr(),  # horizontal line
+# ])
 
 @app.callback(
     Output("lang-dropdown", "style"),
@@ -544,7 +545,7 @@ if quick_mode == 1:
               Input('submit-val', 'n_clicks'),
               prevent_initial_call=True)
     def update_output(n_clicks):
-        return quick_parse(), pd.read_csv('data/output.csv').to_dict()
+        return quick_parse(), pd.read_csv(os.path.join('data', 'output.csv')).to_dict()
 else:
     @callback(Output('output-data-upload', 'children'),
               Output('intermediate-value', 'data'),
@@ -694,4 +695,5 @@ def render_page_content(pathname, data, n_clicks, contents, text, language, sent
             
 
 if __name__ == '__main__':
+    # app.run(debug=True)
     app.run(debug=True, host='0.0.0.0')
