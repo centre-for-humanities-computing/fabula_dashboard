@@ -204,6 +204,7 @@ with open('src/assets/texts/home_page.txt', 'r') as file:
             home_page_text = file.read()
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP],suppress_callback_exceptions=True)
+server = app.server
 
 # the style arguments for the sidebar. We use position:fixed and a fixed width
 SIDEBAR_STYLE = {

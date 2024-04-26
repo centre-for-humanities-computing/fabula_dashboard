@@ -15,7 +15,7 @@ data/CHICAGO_MEASURES_FEB24.xlsx
 data/NRC-VAD-Lexicon.txt
 data/concreteness_dict.json
 data/moby_dick.txt
-data/temp*.txt
+data/*.txt
 
 # python cache
 __pycache__/
@@ -27,3 +27,4 @@ src/roget/
 
 
 data/output.csv
+
