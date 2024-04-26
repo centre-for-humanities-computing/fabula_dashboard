@@ -22,8 +22,8 @@ __pycache__/
 *.pyc
 
 # functions from fabulanet 
-src/saffine/
-src/roget/
+# src/saffine/
+# src/roget/
 
 
 data/output.csv
