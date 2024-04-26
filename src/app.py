@@ -293,6 +293,13 @@ def parse_contents(contents, filename, date, language, sentiment, text, fileorte
         print(Exception)
         return html.Div([dbc.Row([html.Hr(style = {'margin': '10px'}),dbc.Nav([dbc.NavLink("Home", href="/", active="exact"),], vertical=False, pills=True,),html.Hr(style = {'margin': '10px'}),]),]), None, None
 
+    ### removing syuzhet for render deployment
+    if sentiment == 'syuzhet':
+        sentiment = 'afinn'
+    if sentiment == 'avg_syuzhet_vader':
+        sentiment = 'afinn'
+    ###
+
     if fileortext == 'file':
         # if contents == ...:
         content_type, content_string = contents[0].split(',')
