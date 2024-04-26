@@ -43,6 +43,28 @@ def create_fig(metric, metric_format, title_1, title_2):
 
     return fig
 
+def floating_table(df: pd.DataFrame) -> dbc.Col:
+    # return dbc.Col([
+    #     dbc.Card([
+    #         dbc.CardBody([
+    #             html.Table([
+    #                 html.Thead([
+    #                     html.Tr([html.Th(col) for col in df.columns])
+    #                 ]),
+    #                 html.Tbody([
+    #                     html.Tr([
+    #                         html.Td(df.iloc[i][col]) for col in df.columns
+    #                     ]) for i in range(len(df))
+    #                 ])
+    #             ])
+    #         ])
+    #     ])
+    # ], width = {'size': 6, 'offset': 3})
+    return html.P("Float", style = {'fontSize': 50, 'textAlign': 'center', 'margin': '10px'})
+
+
+
+
 def value_boxes(column_name: str, value_name: str, df: pd.DataFrame, color: str) -> dbc.Col:
     return dbc.Col([
         dbc.Card([
@@ -355,6 +377,7 @@ def parse_contents(contents, filename, date, language, sentiment, text, fileorte
                         dbc.NavLink("Entropy", href="/entro", active="exact"),
                         dbc.NavLink("Readability", href="/read", active="exact"),
                         dbc.NavLink("Roget", href="/roget", active="exact"),
+                        dbc.NavLink("Float", href="/float", active="exact"),
                         ], vertical=False, pills=True,),
                     html.Hr(style = {'margin': '10px'}),  # horizontal line
                     ]),
@@ -616,6 +639,8 @@ def render_page_content(pathname, data, n_clicks, contents, text, language, sent
                     return html.Div([
                         dbc.Row([html.P(children=['First 500 characters:'], className="fw-bold fs-10"),html.P(children=[full_string[:500], '...']), html.Hr()]),
                         roget_func(roget_df=roget_df, roget_explanation_text=roget_explanation_text)])
+                elif pathname == "/float":
+                     return html.Div([floating_table(concat_df)])
             if language == 'danish':
                 concat_df = pd.DataFrame.from_dict(data)
 
