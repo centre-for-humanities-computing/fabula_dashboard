@@ -15,6 +15,9 @@ from statistics import mean
 from statistics import stdev
 
 from metrics_function import *
+from spacy.cli import download
+download('en_core_web_sm')
+download('da_core_news_sm')
 
 quick_mode = 0
 
