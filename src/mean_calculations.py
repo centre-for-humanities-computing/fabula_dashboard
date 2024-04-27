@@ -4,6 +4,7 @@
 import pandas as pd
 from statistics import mean
 from statistics import stdev
+import os
 df = pd.read_excel('data/CHICAGO_MEASURES_FEB24.xlsx')
 
 # calculate the mean of the columns with numerical data
@@ -101,4 +102,4 @@ mean_df = pd.DataFrame(mean, columns=['Mean'])
 mean_df = mean_df.T
 
 # save the mean dataframe to a csv file
-mean_df.to_csv('data/mean.csv')
+mean_df.to_csv(os.path.join('data', 'mean.csv'))

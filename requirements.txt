@@ -1,5 +1,5 @@
-pandas
-dash
+pandas>=2.2.1
+dash>=2.15.0
 afinn>=0.1
 dframcy>=0.1.6
 lexical_diversity>=0.1.1

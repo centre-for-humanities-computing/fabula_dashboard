@@ -23,7 +23,7 @@ load_figure_template("minty")
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 # read in mean file
-mean_df = pd.read_csv(os.path.join('data', 'mean.csv'))
+mean_df = pd.read_csv(os.path.join('src', 'data', 'mean.csv'))
 
 def create_fig(metric, metric_format, title_1, title_2):
     #Add indicator
