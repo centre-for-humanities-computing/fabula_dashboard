@@ -15,9 +15,9 @@ from statistics import mean
 from statistics import stdev
 
 from metrics_function import *
-from spacy.cli import download
-download('en_core_web_sm')
-download('da_core_news_sm')
+# from spacy.cli import download
+# download('en_core_web_sm')
+# download('da_core_news_sm')
 
 quick_mode = 0
 
@@ -81,6 +81,43 @@ def value_boxes(column_name: str, value_name: str, df: pd.DataFrame, color: str)
         style = {"backgroundColor": color, 'borderColor': 'black'})
     ], width = {'size': 3, 'offset': 2})
 
+def value_boxes_1(value_name: str, color: str, location: dict, extra_style: dict = {}) -> dbc.Col:
+    return dbc.Col([
+        dbc.Card([
+            dbc.CardBody([
+                html.Div(f"{value_name}", style=style_value_text),
+            ])
+        ], style = {"backgroundColor": color, 'borderColor': 'black'}|extra_style)
+    ], width = location)
+
+def value_boxes_2(column_name: str, df: pd.DataFrame, color: str, location: dict, extra_style: dict = {}) -> dbc.Col:
+    return dbc.Col([
+        dbc.Card([
+            dbc.CardBody([
+                html.Div(f"{df[df['Metric'] == column_name]['Value'].values[0].round(2)}", style=style_value_value),
+            ])
+        ], style = {"backgroundColor": color, 'borderColor': 'black'}|extra_style)
+    ], width = location)
+
+def value_boxes_3(column_name: str, df: pd.DataFrame, color: str, location: dict, extra_style: dict = {}) -> dbc.Col:
+    return dbc.Col([
+        dbc.Card([
+            dbc.CardBody([
+                html.Div(f"{df[df['Metric'] == column_name]['Mean'].values[0].round(2)}", style=style_value_value) if not df[df['Metric'] == column_name]['Mean'].isna().any() else html.Div("NA", style=style_value_value)
+            ])
+        ], style = {"backgroundColor": color, 'borderColor': 'black'}|extra_style)
+    ], width = location)
+
+def value_boxes_4(column_name: str, df: pd.DataFrame, color: str, location: dict, extra_style: dict = {}) -> dbc.Col:
+    return dbc.Col([
+        dbc.Card([
+            dbc.CardBody([
+                html.Div(f"{df[df['Metric'] == column_name]['Mean'].values[0].round(2)}", style=style_value_value) if not df[df['Metric'] == column_name]['Mean'].isna().any() else html.Div("NA", style=style_value_value)
+            ])
+        ], style = {"backgroundColor": color, 'borderColor': 'black'}|extra_style)
+    ], width = location)
+
+
 def metrics_explanation(metric_group: str, explanation: str, id_but: str, id_col) -> dbc.Row:
     return dbc.Row([
          dbc.Col([
@@ -98,18 +135,59 @@ def styl_func(style_df: pd.DataFrame, stylometrics_explanation_text: str) -> htm
     return html.Div([
         html.H2(children='Stylometrics', className="fw-bold text-white"),
         dbc.Row([
-            value_boxes('word_count', 'Word Count', style_df, palette_1[2]),
-            value_boxes('average_wordlen', 'Word Length', style_df, palette_1[2]),
+            value_boxes_1('Your Value', palette_1[2],{'size': 2, 'offset': 3}),
+            value_boxes_1('Canonical Mean', palette_1[2],{'size': 2, 'offset': 1}),
+            value_boxes_1('Bestseller Mean', palette_1[2],{'size': 2, 'offset': 1}),
         ], style={"marginTop": 10, "marginBottom": 10}),
         dbc.Row([
-            value_boxes('msttr', 'MSTTR', style_df, palette_1[2]),
-            value_boxes('average_sentlen', 'Average Sentence Length', style_df, palette_1[2]),
-        ], style={"marginTop": 10, "marginBottom": 10}),
+            value_boxes_1('Word Count', palette_1[2],{'size': 2, 'offset': 0}),
+            value_boxes_2('word_count', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
+            value_boxes_3('word_count', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
+            value_boxes_4('word_count', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
+        ], style={"marginTop": 20, "marginBottom": 20}),
         dbc.Row([
-            value_boxes('bzipr', 'bzipr', style_df, palette_1[2]),
-        ], style={"marginTop": 10, "marginBottom": 10}),
+            value_boxes_1('Word Length', palette_1[2],{'size': 2, 'offset': 0}),
+            value_boxes_2('average_wordlen', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
+            value_boxes_3('average_wordlen', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
+            value_boxes_4('average_wordlen', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
+        ], style={"marginTop": 20, "marginBottom": 20}),
+        dbc.Row([
+            value_boxes_1('MSTTR', palette_1[2],{'size': 2, 'offset': 0}),
+            value_boxes_2('msttr', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
+            value_boxes_3('msttr', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
+            value_boxes_4('msttr', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
+        ], style={"marginTop": 20, "marginBottom": 20}),
+        dbc.Row([
+            value_boxes_1('Sentence Length', palette_1[2],{'size': 2, 'offset': 0}),
+            value_boxes_2('average_sentlen', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
+            value_boxes_3('average_sentlen', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
+            value_boxes_4('average_sentlen', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
+        ], style={"marginTop": 20, "marginBottom": 20}),
+        dbc.Row([
+            value_boxes_1('bzipr', palette_1[2],{'size': 2, 'offset': 0}),
+            value_boxes_2('bzipr', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
+            value_boxes_3('bzipr', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
+            value_boxes_4('bzipr', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
+        ], style={"marginTop": 20, "marginBottom": 20}),
         metrics_explanation('Stylometrics', stylometrics_explanation_text, "collapse-button_1", "collapse_1"),
     ], style = {"backgroundColor": personal_palette[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"})
+
+# def styl_func(style_df: pd.DataFrame, stylometrics_explanation_text: str) -> html.Div:
+#     return html.Div([
+#         html.H2(children='Stylometrics', className="fw-bold text-white"),
+#         dbc.Row([
+#             value_boxes('word_count', 'Word Count', style_df, palette_1[2]),
+#             value_boxes('average_wordlen', 'Word Length', style_df, palette_1[2]),
+#         ], style={"marginTop": 10, "marginBottom": 10}),
+#         dbc.Row([
+#             value_boxes('msttr', 'MSTTR', style_df, palette_1[2]),
+#             value_boxes('average_sentlen', 'Average Sentence Length', style_df, palette_1[2]),
+#         ], style={"marginTop": 10, "marginBottom": 10}),
+#         dbc.Row([
+#             value_boxes('bzipr', 'bzipr', style_df, palette_1[2]),
+#         ], style={"marginTop": 10, "marginBottom": 10}),
+#         metrics_explanation('Stylometrics', stylometrics_explanation_text, "collapse-button_1", "collapse_1"),
+#     ], style = {"backgroundColor": personal_palette[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"})
 
 def sent_func(sent_df: pd.DataFrame, sentiment_explanation_text: str) -> html.Div:
     return html.Div([
@@ -630,7 +708,7 @@ def render_page_content(pathname, data, n_clicks, contents, text, language, sent
                 if pathname == "/":
                     return html.Div([
                         html.P("Welcome to Fabula-NET", style = {'fontSize': 50, 'textAlign': 'center', 'margin': '10px'}),
-                        html.P(dcc.Markdown(home_page_text), style = {'fontSize': 20, 'textAlign': 'center', 'margin': '10px'}),])
+                        html.P(dcc.Markdown(home_page_text), style = {'fontSize': 20, 'textAlign': 'left', 'margin': '10px'}),])
                 elif pathname == "/styl":
                     return html.Div([
                         dbc.Row([html.P(children=['First 500 characters:'], className="fw-bold fs-10"),html.P(children=[full_string[:500], '...']), html.Hr()]),
@@ -664,7 +742,7 @@ def render_page_content(pathname, data, n_clicks, contents, text, language, sent
                 if pathname == "/":
                     return html.Div([
                         html.P("Welcome to Fabula-NET", style = {'fontSize': 50, 'textAlign': 'center', 'margin': '10px'}),
-                        html.P(dcc.Markdown(home_page_text), style = {'fontSize': 20, 'textAlign': 'center', 'margin': '10px'}),])
+                        html.P(dcc.Markdown(home_page_text), style = {'fontSize': 20, 'textAlign': 'left', 'margin': '10px'}),])
                 elif pathname == "/styl":
                     return html.Div([
                         dbc.Row([html.P(children=['First 500 characters:'], className="fw-bold fs-10"),html.P(children=[full_string[:500], '...']), html.Hr()]),
@@ -689,7 +767,7 @@ def render_page_content(pathname, data, n_clicks, contents, text, language, sent
     elif pathname == "/":
         return html.Div([
             html.P("Welcome to Fabula-NET", style = {'fontSize': 50, 'textAlign': 'center', 'margin': '10px'}),
-            html.P(dcc.Markdown(home_page_text), style = {'fontSize': 20, 'textAlign': 'center', 'margin': '10px'}),])
+            html.P(dcc.Markdown(home_page_text), style = {'fontSize': 20, 'textAlign': 'left', 'margin': '10px'}),])
 
 # @callback(Output('output-data-upload', 'children'),
 #           Input('intermediate-value', 'data'))
