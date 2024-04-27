@@ -187,21 +187,21 @@ palette_5 = ["#40a49c", "#e8f4f4"]
 
 
 # read in explanation filex
-with open(os.path.join('src', 'assets', 'texts', 'metrics_explanation.txt'), 'r') as file:
+with open(os.path.join('assets', 'texts', 'metrics_explanation.txt'), 'r') as file:
             explanation_text = file.read()
 
 # read in explanation filex
-with open(os.path.join('src', 'assets', 'texts', 'stylometrics_explanations.txt'), 'r') as file:
+with open(os.path.join('assets', 'texts', 'stylometrics_explanations.txt'), 'r') as file:
             stylometrics_explanation_text = file.read()
-with open(os.path.join('src', 'assets', 'texts', 'sentiment_explanations.txt'), 'r') as file:
+with open(os.path.join('assets', 'texts', 'sentiment_explanations.txt'), 'r') as file:
             sentiment_explanation_text = file.read()
-with open(os.path.join('src', 'assets', 'texts', 'entropy_explanations.txt'), 'r') as file:
+with open(os.path.join('assets', 'texts', 'entropy_explanations.txt'), 'r') as file:
             entropy_explanation_text = file.read()
-with open(os.path.join('src', 'assets', 'texts', 'readability_explanations.txt'), 'r') as file:
+with open(os.path.join('assets', 'texts', 'readability_explanations.txt'), 'r') as file:
             readability_explanation_text = file.read()
-with open(os.path.join('src', 'assets', 'texts', 'roget_explanations.txt'), 'r') as file:
+with open(os.path.join('assets', 'texts', 'roget_explanations.txt'), 'r') as file:
             roget_explanation_text = file.read()
-with open(os.path.join('src', 'assets', 'texts', 'home_page.txt'), 'r') as file:
+with open(os.path.join('assets', 'texts', 'home_page.txt'), 'r') as file:
             home_page_text = file.read()
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP],suppress_callback_exceptions=True)
@@ -696,4 +696,4 @@ def render_page_content(pathname, data, n_clicks, contents, text, language, sent
 
 if __name__ == '__main__':
     # app.run(debug=True)
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=True)
