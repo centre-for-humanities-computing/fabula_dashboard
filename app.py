@@ -247,7 +247,7 @@ palette_5 = ["#40a49c", "#e8f4f4"]
 
 
 # read in explanation filex
-with open(os.path.join('/app', 'assets', 'texts', 'metrics_explanation.txt'), 'r') as file:
+with open(os.path.join('assets', 'texts', 'metrics_explanation.txt'), 'r') as file:
             explanation_text = file.read()
 
 # read in explanation filex
@@ -344,7 +344,6 @@ app.layout = dbc.Container([
     className="container-fluid", style={}, fluid = True)
 
 def parse_contents(contents, filename, date, language, sentiment, text, fileortext):
-    
 
     if language is None:
         print(Exception)
@@ -364,7 +363,6 @@ def parse_contents(contents, filename, date, language, sentiment, text, fileorte
     if fileortext == 'file':
         # if contents == ...:
         content_type, content_string = contents[0].split(',')
-        print(content_string)
 
         decoded = base64.b64decode(content_string)
         try:
@@ -427,8 +425,6 @@ def parse_contents(contents, filename, date, language, sentiment, text, fileorte
     df = df.T
     concat_df = pd.concat([column_names_row, df, mean_df_common], ignore_index=True, axis = 1)
     concat_df.columns = ['Metric', 'Value', 'Mean_Bestsellers', 'Mean_Canonicals']
-    print(concat_df)
-
     # use only specified rows from concat_df
     # style_df = concat_df[concat_df['Metric'].isin(['word_count', 'average_wordlen', 'msttr', 'average_sentlen', 'bzipr'])]
     # sent_df = concat_df[concat_df['Metric'].isin(['mean_sentiment', 'std_sentiment', 'mean_sentiment_first_ten_percent', 'mean_sentiment_last_ten_percent', 'difference_lastten_therest', 'arc_mean', 'arc_sd', 'mean_sentiment_per_segment_mean', 'mean_sentiment_per_segment_sd'])]
@@ -759,4 +755,4 @@ def render_page_content(pathname, data, n_clicks, contents, text, language, sent
 
 if __name__ == '__main__':
     # app.run(debug=True)
-    app.run(debug=True)
+    app.run(debug=False)
