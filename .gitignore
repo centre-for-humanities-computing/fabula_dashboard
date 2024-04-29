@@ -28,4 +28,4 @@ __pycache__/
 
 data/output.csv
 
-assets/
+# assets/
