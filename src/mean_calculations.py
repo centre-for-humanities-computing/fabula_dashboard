@@ -5,7 +5,7 @@ import pandas as pd
 from statistics import mean
 from statistics import stdev
 import os
-df = pd.read_excel('data/CHICAGO_MEASURES_FEB24.xlsx')
+df = pd.read_excel(os.path.join('data', 'CHICAGO_MEASURES_FEB24.xlsx'))
 
 # calculate the mean of the columns with numerical data
 # identify the columns with numerical data
@@ -36,7 +36,7 @@ df['arc_sd'] = df['ARC_SEGMENTS_MEANS'].map(sd_float)
 # subset rows with a 1 in the 'BESTSELLERS' column or in the 'CANON_ALL' column
 df = df[(df['BESTSELLERS'] == 1) | (df['CANON_ALL'] == 1)]
 
-df_subset = df.loc[:,['TITLE_LENGTH', 'HURST', 'APPENT', 'WORDCOUNT', 
+df_subset = df.loc[:,['BESTSELLERS','CANON_ALL','TITLE_LENGTH', 'HURST', 'APPENT', 'WORDCOUNT', 
                        'SENTENCE_LENGTH', 'BZIP_NEW', 'MSTTR-100', 
                        'BZIP_TXT', 'READABILITY_FLESCH_GRADE', 
                        'READABILITY_FLESCH_EASE', 'READABILITY_SMOG',
@@ -66,7 +66,7 @@ df_subset = df.loc[:,['TITLE_LENGTH', 'HURST', 'APPENT', 'WORDCOUNT',
 # choose 
 
 # change column names to be more descriptive
-df_subset.columns = ['TITLE_LENGTH', 'hurst','approximate_entropy_value', 'word_count', 
+df_subset.columns = ['BESTSELLERS','CANON_ALL','TITLE_LENGTH', 'hurst','approximate_entropy_value', 'word_count', 
                        'average_sentlen', 'bzipr', 'msttr', 
                        'BZIP_TXT', 'flesch_grade', 
                        'flesch_ease', 'smog',
@@ -95,11 +95,19 @@ df_subset.columns = ['TITLE_LENGTH', 'hurst','approximate_entropy_value', 'word_
 
 
 
-mean = df_subset.mean()
+mean_best = df_subset[(df['BESTSELLERS'] == 1)].mean()
+mean_canon = df_subset[(df['CANON_ALL'] == 1)].mean()
 # save the mean to a new dataframe with the old column names and one row wth the mean
-mean_df = pd.DataFrame(mean, columns=['Mean'])
-# transpose the dataframe
-mean_df = mean_df.T
+mean_df_best = pd.DataFrame(mean_best, columns=['Mean_Best'])
+mean_df_best = mean_df_best.T
+mean_df_canon = pd.DataFrame(mean_canon, columns=['Mean_Cano'])
+mean_df_canon = mean_df_canon.T
+
+# concatenate the two dataframes
+mean_df = pd.concat([mean_df_best, mean_df_canon])
+
+# remove the columns BESTSELLERS and CANON_ALL
+mean_df = mean_df.drop(columns=['BESTSELLERS', 'CANON_ALL'])
 
 # save the mean dataframe to a csv file
 mean_df.to_csv(os.path.join('data', 'mean.csv'))

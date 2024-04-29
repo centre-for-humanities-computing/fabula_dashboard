@@ -47,35 +47,14 @@ def create_fig(metric, metric_format, title_1, title_2):
 
     return fig
 
-def floating_table(df: pd.DataFrame) -> dbc.Col:
-    # return dbc.Col([
-    #     dbc.Card([
-    #         dbc.CardBody([
-    #             html.Table([
-    #                 html.Thead([
-    #                     html.Tr([html.Th(col) for col in df.columns])
-    #                 ]),
-    #                 html.Tbody([
-    #                     html.Tr([
-    #                         html.Td(df.iloc[i][col]) for col in df.columns
-    #                     ]) for i in range(len(df))
-    #                 ])
-    #             ])
-    #         ])
-    #     ])
-    # ], width = {'size': 6, 'offset': 3})
-    return html.P("Float", style = {'fontSize': 50, 'textAlign': 'center', 'margin': '10px'})
-
-
-
-
 def value_boxes(column_name: str, value_name: str, df: pd.DataFrame, color: str) -> dbc.Col:
     return dbc.Col([
         dbc.Card([
             dbc.CardBody([
                 html.Div(f"{value_name}", style=style_value_text),
                 html.Div(f"{df[df['Metric'] == column_name]['Value'].values[0].round(2)}", style=style_value_value),
-                html.Div(f"(Global Mean {value_name} {df[df['Metric'] == column_name]['Mean'].values[0].round(2)})", style=style_value_global) if not df[df['Metric'] == column_name]['Mean'].isna().any() else None
+                html.Div(f"(Bestsellers Mean {value_name} {df[df['Metric'] == column_name]['Mean_Bestsellers'].values[0].round(2)})", style=style_value_global) if not df[df['Metric'] == column_name]['Mean_Bestsellers'].isna().any() else None,
+                html.Div(f"(Canonicals Mean {value_name} {df[df['Metric'] == column_name]['Mean_Canonicals'].values[0].round(2)})", style=style_value_global) if not df[df['Metric'] == column_name]['Mean_Canonicals'].isna().any() else None
             ])
         ] if column_name in df['Metric'].values else None, 
         style = {"backgroundColor": color, 'borderColor': 'black'})
@@ -96,25 +75,25 @@ def value_boxes_2(column_name: str, df: pd.DataFrame, color: str, location: dict
             dbc.CardBody([
                 html.Div(f"{df[df['Metric'] == column_name]['Value'].values[0].round(2)}", style=style_value_value),
             ])
-        ], style = {"backgroundColor": color, 'borderColor': 'black'}|extra_style)
+        ], style = {"backgroundColor": color, 'borderColor': 'black', 'width': '60%', "margin": "0px 0px 0px 2.5vw"}|extra_style)
     ], width = location)
 
 def value_boxes_3(column_name: str, df: pd.DataFrame, color: str, location: dict, extra_style: dict = {}) -> dbc.Col:
     return dbc.Col([
         dbc.Card([
             dbc.CardBody([
-                html.Div(f"{df[df['Metric'] == column_name]['Mean'].values[0].round(2)}", style=style_value_value) if not df[df['Metric'] == column_name]['Mean'].isna().any() else html.Div("NA", style=style_value_value)
+                html.Div(f"{df[df['Metric'] == column_name]['Mean_Bestsellers'].values[0].round(2)}", style=style_value_value) if not df[df['Metric'] == column_name]['Mean_Bestsellers'].isna().any() else html.Div("NA", style=style_value_value)
             ])
-        ], style = {"backgroundColor": color, 'borderColor': 'black'}|extra_style)
+        ], style = {"backgroundColor": color, 'borderColor': 'black', 'width': '60%', "margin": "0px 0px 0px 2.5vw"}|extra_style)
     ], width = location)
 
 def value_boxes_4(column_name: str, df: pd.DataFrame, color: str, location: dict, extra_style: dict = {}) -> dbc.Col:
     return dbc.Col([
         dbc.Card([
             dbc.CardBody([
-                html.Div(f"{df[df['Metric'] == column_name]['Mean'].values[0].round(2)}", style=style_value_value) if not df[df['Metric'] == column_name]['Mean'].isna().any() else html.Div("NA", style=style_value_value)
+                html.Div(f"{df[df['Metric'] == column_name]['Mean_Canonicals'].values[0].round(2)}", style=style_value_value) if not df[df['Metric'] == column_name]['Mean_Canonicals'].isna().any() else html.Div("NA", style=style_value_value)
             ])
-        ], style = {"backgroundColor": color, 'borderColor': 'black'}|extra_style)
+        ], style = {"backgroundColor": color, 'borderColor': 'black', 'width': '60%', "margin": "0px 0px 0px 2.5vw"}|extra_style)
     ], width = location)
 
 
@@ -141,33 +120,33 @@ def styl_func(style_df: pd.DataFrame, stylometrics_explanation_text: str) -> htm
         ], style={"marginTop": 10, "marginBottom": 10}),
         dbc.Row([
             value_boxes_1('Word Count', palette_1[2],{'size': 2, 'offset': 0}),
-            value_boxes_2('word_count', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
-            value_boxes_3('word_count', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
-            value_boxes_4('word_count', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
+            value_boxes_2('word_count', style_df, palette_1[2],{'size': 2, 'offset': 1}),
+            value_boxes_3('word_count', style_df, palette_1[2],{'size': 2, 'offset': 1}),
+            value_boxes_4('word_count', style_df, palette_1[2],{'size': 2, 'offset': 1}),
         ], style={"marginTop": 20, "marginBottom": 20}),
         dbc.Row([
             value_boxes_1('Word Length', palette_1[2],{'size': 2, 'offset': 0}),
-            value_boxes_2('average_wordlen', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
-            value_boxes_3('average_wordlen', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
-            value_boxes_4('average_wordlen', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
+            value_boxes_2('average_wordlen', style_df, palette_1[2],{'size': 2, 'offset': 1}),
+            value_boxes_3('average_wordlen', style_df, palette_1[2],{'size': 2, 'offset': 1}),
+            value_boxes_4('average_wordlen', style_df, palette_1[2],{'size': 2, 'offset': 1}),
         ], style={"marginTop": 20, "marginBottom": 20}),
         dbc.Row([
             value_boxes_1('MSTTR', palette_1[2],{'size': 2, 'offset': 0}),
-            value_boxes_2('msttr', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
-            value_boxes_3('msttr', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
-            value_boxes_4('msttr', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
+            value_boxes_2('msttr', style_df, palette_1[2],{'size': 2, 'offset': 1}),
+            value_boxes_3('msttr', style_df, palette_1[2],{'size': 2, 'offset': 1}),
+            value_boxes_4('msttr', style_df, palette_1[2],{'size': 2, 'offset': 1}),
         ], style={"marginTop": 20, "marginBottom": 20}),
         dbc.Row([
             value_boxes_1('Sentence Length', palette_1[2],{'size': 2, 'offset': 0}),
-            value_boxes_2('average_sentlen', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
-            value_boxes_3('average_sentlen', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
-            value_boxes_4('average_sentlen', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
+            value_boxes_2('average_sentlen', style_df, palette_1[2],{'size': 2, 'offset': 1}),
+            value_boxes_3('average_sentlen', style_df, palette_1[2],{'size': 2, 'offset': 1}),
+            value_boxes_4('average_sentlen', style_df, palette_1[2],{'size': 2, 'offset': 1}),
         ], style={"marginTop": 20, "marginBottom": 20}),
         dbc.Row([
             value_boxes_1('bzipr', palette_1[2],{'size': 2, 'offset': 0}),
-            value_boxes_2('bzipr', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
-            value_boxes_3('bzipr', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
-            value_boxes_4('bzipr', style_df, palette_1[2],{'size': 2, 'offset': 1}, {'width': '75%', "margin": "0px 0px 0px 1.5vw"}),
+            value_boxes_2('bzipr', style_df, palette_1[2],{'size': 2, 'offset': 1}),
+            value_boxes_3('bzipr', style_df, palette_1[2],{'size': 2, 'offset': 1}),
+            value_boxes_4('bzipr', style_df, palette_1[2],{'size': 2, 'offset': 1}),
         ], style={"marginTop": 20, "marginBottom": 20}),
         metrics_explanation('Stylometrics', stylometrics_explanation_text, "collapse-button_1", "collapse_1"),
     ], style = {"backgroundColor": personal_palette[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"})
@@ -447,7 +426,8 @@ def parse_contents(contents, filename, date, language, sentiment, text, fileorte
     mean_df_common = mean_df[common_columns].T
     df = df.T
     concat_df = pd.concat([column_names_row, df, mean_df_common], ignore_index=True, axis = 1)
-    concat_df.columns = ['Metric', 'Value', 'Mean']
+    concat_df.columns = ['Metric', 'Value', 'Mean_Bestsellers', 'Mean_Canonicals']
+    print(concat_df)
 
     # use only specified rows from concat_df
     # style_df = concat_df[concat_df['Metric'].isin(['word_count', 'average_wordlen', 'msttr', 'average_sentlen', 'bzipr'])]
@@ -467,7 +447,7 @@ def parse_contents(contents, filename, date, language, sentiment, text, fileorte
                         dbc.NavLink("Entropy", href="/entro", active="exact"),
                         dbc.NavLink("Readability", href="/read", active="exact"),
                         dbc.NavLink("Roget", href="/roget", active="exact"),
-                        dbc.NavLink("Float", href="/float", active="exact"),
+                        dbc.NavLink("Float", href="/about", active="exact"),
                         ], vertical=False, pills=True,),
                     html.Hr(style = {'margin': '10px'}),  # horizontal line
                     ]),
@@ -729,8 +709,8 @@ def render_page_content(pathname, data, n_clicks, contents, text, language, sent
                     return html.Div([
                         dbc.Row([html.P(children=['First 500 characters:'], className="fw-bold fs-10"),html.P(children=[full_string[:500], '...']), html.Hr()]),
                         roget_func(roget_df=roget_df, roget_explanation_text=roget_explanation_text)])
-                elif pathname == "/float":
-                     return html.Div([floating_table(concat_df)])
+                elif pathname == "/about":
+                     return html.Div(["Add further information about metrics and stuff here"])
             if language == 'danish':
                 concat_df = pd.DataFrame.from_dict(data)
 
@@ -755,6 +735,8 @@ def render_page_content(pathname, data, n_clicks, contents, text, language, sent
                     return html.Div([
                         dbc.Row([html.P(children=['First 500 characters:'], className="fw-bold fs-10"),html.P(children=[full_string[:500], '...']), html.Hr()]),
                         entro_func(entropy_df=entropy_df, entropy_explanation_text=entropy_explanation_text)])
+                elif pathname == "/about":
+                     return html.Div(["Add further information about metrics and stuff here"])
         # If the user tries to reach a different page, return a 404 message
         return html.Div(
             [
