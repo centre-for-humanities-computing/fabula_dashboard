@@ -18,7 +18,7 @@ def compute_metrics(text:str, lang:str, sentiment_method:str) -> dict:
     lmtzr = WordNetLemmatizer()
 
     # load spacy model according to language
-    #print(f"loading spacy model for {lang}")
+    print(f"loading spacy model for {lang}")
     nlp = get_nlp(lang)
     nlp.max_length = 3500000
 
@@ -26,12 +26,12 @@ def compute_metrics(text:str, lang:str, sentiment_method:str) -> dict:
     output = {}
 
     # prepare text and tokens
-    #print("preparing text and tokens")
+    print("preparing text and tokens")
     sents = sent_tokenize(text, language=lang)
     words = word_tokenize(text, language=lang)
 
     # spacy
-    #print("processing spacy")
+    print("processing spacy")
     spacy_attributes = []
     for token in nlp(text):
         token_attributes = get_spacy_attributes(token)
@@ -40,38 +40,41 @@ def compute_metrics(text:str, lang:str, sentiment_method:str) -> dict:
     spacy_df = create_spacy_df(spacy_attributes)
 
     # stylometrics
-    #print("processing stylometrics")
+    print("processing stylometrics")
     ## for words
-    #print("processing words")
+    print("processing words")
     output["word_count"] = len(words)
     output["average_wordlen"] = avg_wordlen(words)
     output["msttr"] = ld.msttr(words, window_length=100)
 
     # for sentences
-    #print("processing sentences")
+    print("processing sentences")
     # if len(sents) < 1502:
-    if len(sents) > 0:
+    if len(sents) < 1:
+        print("text not long enough for stylometrics\n")
+
+    else:
         output["average_sentlen"] = avg_sentlen(sents)
         output["gzipr"], output["bzipr"] = compressrat(sents)
 
     # bigram and word entropy
-    #print("processing bigram and word entropy")
+    print("processing bigram and word entropy")
     try:
         output["bigram_entropy"], output["word_entropy"] = text_entropy(text, language=lang, base=2, asprob=False)
     except:
-        #print(text[:10])
-        #print(lang)
+        print(text[:10])
+        print(lang)
         print("error in bigram and/or word entropy\n")
 
     # setting up sentiment analyzer
-    #print("setting up sentiment analyzer")
+    print("setting up sentiment analyzer")
     if "vader" in sentiment_method:
         nltk.download("vader_lexicon")
     
     arc = get_sentarc(sents, sentiment_method, lang)
 
     # basic sentiment features
-    #print("processing basic sentiment features")
+    print("processing basic sentiment features")
     # if len(arc) < 60:
     # if len(arc) < 0:
     #     print("arc not long enough for basic sentiment features\n")
@@ -98,7 +101,7 @@ def compute_metrics(text:str, lang:str, sentiment_method:str) -> dict:
         ) = get_basic_sentarc_features(arc, len(sents))
 
     # approximate entropy
-    #print("processing approximate entropy")
+    print("processing approximate entropy")
     try:
         output["approximate_entropy"] = nk.entropy_approximate(
             arc, dimension=2, tolerance="sd"
@@ -107,7 +110,7 @@ def compute_metrics(text:str, lang:str, sentiment_method:str) -> dict:
         print("error with approximate entropy\n")
     
     # hurst
-    #print("processing hurst")
+    print("processing hurst")
     try:
         output["hurst"] = get_hurst(arc)
     except:
@@ -116,7 +119,7 @@ def compute_metrics(text:str, lang:str, sentiment_method:str) -> dict:
     # doing the things that only work in English
     if lang == "english":
         # readability
-        #print("processing readability")
+        print("processing readability")
         try:
             (
                 output["flesch_grade"],
@@ -161,7 +164,7 @@ def compute_metrics(text:str, lang:str, sentiment_method:str) -> dict:
         output["dominance"] = dom
 
         # roget
-        #print("processing roget")
+        print("processing roget")
         all_roget_categories = roget.list_all_categories()
 
         roget_df = filter_spacy_df(spacy_df)
