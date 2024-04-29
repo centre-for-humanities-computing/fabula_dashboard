@@ -1,4 +1,0 @@
-#### **Mean Sentiment**: A sentiment scores is calculated for each sentence in the text, and then the avergae is taken across sentences. The method used for sentiment scoring is either afinn, vader, syuzhet, or a combination between vader and syuzhet.
-#### **Mean Sentiment (First 10%)**: The average sentiment score for the sentences in the first 10% of the text.
-#### **Mean Sentiment (Last 10%)**: The average sentiment score for the sentences in the first 10% of the text.
-#### **Difference between last 10% and the rest**: The difference in sentiment between the average of the last 10% and the average of the remaining 90% of the text.

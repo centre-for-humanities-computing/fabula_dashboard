@@ -5,7 +5,7 @@ from nltk.stem.wordnet import WordNetLemmatizer
 from lexical_diversity import lex_div as ld
 import neurokit2 as nk
 
-from src.utils import *
+from utils import *
 
 
 def compute_metrics(text:str, lang:str, sentiment_method:str) -> dict:

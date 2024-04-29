@@ -11,8 +11,8 @@ from afinn import Afinn
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 # import rpy2.robjects.packages as rpackages
 # from rpy2.robjects import conversion, default_converter
-import src.saffine.multi_detrending as md
-import src.roget.roget as roget
+import saffine.multi_detrending as md
+import roget.roget as roget
 import textstat
 from math import log
 

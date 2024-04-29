@@ -1,5 +1,0 @@
-#### **Word Count**: Total number of words in the text.
-#### **Average Word Length**: The average length of words in the text.
-#### **Average Sentence Length**: The average length of sentences in the text measured in number of characters.
-#### **MSTTR**: Mean Segmental Type-Token Ratio is a measure of lexical richness. It segments the text in segments of a given size (here 100 words, often taken as standard) and calculates the Type-Token Ratio for each segment - then takes the average of all segment ratios of the whole text.
-#### **bzipr**: Compressibility of the text-files as calculated by dividing the original bitsize of the text with the compressed bitzsize (using bzip2 compression). We calculated the compression ratio (original bit-size/compressed bit-size) for the first 1500 sentences of each text.
