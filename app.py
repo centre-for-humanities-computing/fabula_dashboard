@@ -247,7 +247,7 @@ palette_5 = ["#40a49c", "#e8f4f4"]
 
 
 # read in explanation filex
-with open(os.path.join('assets', 'texts', 'metrics_explanation.txt'), 'r') as file:
+with open(os.path.join('/app', 'assets', 'texts', 'metrics_explanation.txt'), 'r') as file:
             explanation_text = file.read()
 
 # read in explanation filex
