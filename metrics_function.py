@@ -11,8 +11,8 @@ from utils import *
 def compute_metrics(text:str, lang:str, sentiment_method:str) -> dict:
 
     # download nltk resources
-    nltk.download("punkt")
-    nltk.download("wordnet")
+    # nltk.download("punkt")
+    # nltk.download("wordnet")
 
     # create lemmatizer
     lmtzr = WordNetLemmatizer()
