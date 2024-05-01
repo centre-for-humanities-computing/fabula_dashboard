@@ -79,7 +79,7 @@ df_subset.columns = ['BESTSELLERS','CANON_ALL','TITLE_LENGTH', 'hurst','approxim
                        'SPACY_PUNCT', 'SPACY_STOPS', 'SPACY_SBJ', 'SPACY_PASSIVE',
                        'SPACY_NSUBJ', 'SPACY_AUX', 'SPACY_RELATIVE', 
                        'SPACY_NEGATION', 'BIGRAM_ENTROPY','WORD_ENTROPY',
-                       'AVG_WORDLENGTH','bigram_entropy','word_entropy',
+                       'average_wordlen','bigram_entropy','word_entropy',
                        'ang_slopes','ang_skews','ang_kurtoses','ang_overall',
                        'dis_slopes','dis_skews','dis_kurtoses','dis_overall',
                        'fea_slopes','fea_skews','fea_kurtoses','fea_overall',

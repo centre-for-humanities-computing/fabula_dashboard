@@ -61,6 +61,9 @@ sidebar = html.Div([
     html.H3(children='Choose Sentiment Analysis', style={'margin-top': '50px'}, className="fw-bold"),
     dcc.Dropdown(id='sent-dropdown', placeholder="Select sentiment analysis method", searchable = False, style = {'color': 'black'}),
     html.Br(),
+    html.H3(children='Choose Group (not working)', style={'margin-top': '50px'}, className="fw-bold"),
+    dcc.Dropdown(options=[{'value': 'canonical', 'label': 'Canonical'}, {'value': 'bestseller', 'label': 'Bestseller'}], id='group-dropdown', placeholder="Select a Group", searchable = False, style = {'color': 'black'}, multi = True),
+    html.Br(),
     html.H3(children='Upload File', style={'margin-top': '50px'}, className="fw-bold"),
     dcc.Upload(id='upload-data', children=html.Div(['Drag and Drop or ', html.A('Select Files (.txt)')]), style={'width': '100%',
                                                                                                           'height': '120px', 
@@ -103,7 +106,7 @@ app.layout = dbc.Container([
                   ], width = {'size': 9, 'offset': 3})])],
     className="container-fluid", style={}, fluid = True)
 
-@app.callback(
+@callback(
     Output("lang-dropdown", "style"),
     State("lang-dropdown", "value"),
     Input('submit-val', 'n_clicks'),
@@ -116,7 +119,7 @@ def set_dropdown_required_lang(value, n_clicks):
         else:
             return {'color': 'black'}
 
-@app.callback(
+@callback(
     Output("sent-dropdown", "style"),
     State("sent-dropdown", "value"),
     Input('submit-val', 'n_clicks'),
@@ -129,7 +132,7 @@ def set_dropdown_required_sent(value, n_clicks):
         else:
             return {'color': 'black'}
 
-@app.callback(
+@callback(
     Output('sent-dropdown', "options"),
     Input('lang-dropdown', "value")
 )
@@ -141,55 +144,55 @@ def update_options(value):
     else:
         raise PreventUpdate
 
-# @app.callback(
-#     Output("collapse_1", "is_open"),
-#     [Input("collapse-button_1", "n_clicks")],
-#     [State("collapse_1", "is_open")],
-# )
-# def toggle_collapse_1(n, is_open):
-#     if n:
-#         return not is_open
-#     return is_open
+@callback(
+    Output("collapse_1", "is_open"),
+    [Input("collapse-button_1", "n_clicks")],
+    [State("collapse_1", "is_open")],
+)
+def toggle_collapse_1(n, is_open):
+    if n:
+        return not is_open
+    return is_open
 
-# @app.callback(
-#     Output("collapse_2", "is_open"),
-#     [Input("collapse-button_2", "n_clicks")],
-#     [State("collapse_2", "is_open")],
-# )
-# def toggle_collapse_2(n, is_open):
-#     if n:
-#         return not is_open
-#     return is_open
+@callback(
+    Output("collapse_2", "is_open"),
+    [Input("collapse-button_2", "n_clicks")],
+    [State("collapse_2", "is_open")],
+)
+def toggle_collapse_2(n, is_open):
+    if n:
+        return not is_open
+    return is_open
 
-# @app.callback(
-#     Output("collapse_3", "is_open"),
-#     [Input("collapse-button_3", "n_clicks")],
-#     [State("collapse_3", "is_open")],
-# )
-# def toggle_collapse_3(n, is_open):
-#     if n:
-#         return not is_open
-#     return is_open
+@callback(
+    Output("collapse_3", "is_open"),
+    [Input("collapse-button_3", "n_clicks")],
+    [State("collapse_3", "is_open")],
+)
+def toggle_collapse_3(n, is_open):
+    if n:
+        return not is_open
+    return is_open
 
-# @app.callback(
-#     Output("collapse_4", "is_open"),
-#     [Input("collapse-button_4", "n_clicks")],
-#     [State("collapse_4", "is_open")],
-# )
-# def toggle_collapse_4(n, is_open):
-#     if n:
-#         return not is_open
-#     return is_open
+@callback(
+    Output("collapse_4", "is_open"),
+    [Input("collapse-button_4", "n_clicks")],
+    [State("collapse_4", "is_open")],
+)
+def toggle_collapse_4(n, is_open):
+    if n:
+        return not is_open
+    return is_open
 
-# @app.callback(
-#     Output("collapse_5", "is_open"),
-#     [Input("collapse-button_5", "n_clicks")],
-#     [State("collapse_5", "is_open")],
-# )
-# def toggle_collapse_5(n, is_open):
-#     if n:
-#         return not is_open
-#     return is_open
+@callback(
+    Output("collapse_5", "is_open"),
+    [Input("collapse-button_5", "n_clicks")],
+    [State("collapse_5", "is_open")],
+)
+def toggle_collapse_5(n, is_open):
+    if n:
+        return not is_open
+    return is_open
 
 @callback(Output('file_or_text', 'data'),
           Input('upload-data', 'filename'),

@@ -88,13 +88,71 @@ def parse_contents(contents, filename, language, sentiment, text, fileortext):
     mean_df = pd.read_csv(os.path.join('data', 'mean.csv'))
 
 
-    column_names_row = pd.DataFrame([df.columns], columns=df.columns)
-    column_names_row = column_names_row.T
-    common_columns = df.columns.intersection(mean_df.columns)
-    mean_df_common = mean_df[common_columns].T
+    # column_names_row = pd.DataFrame([df.columns], columns=df.columns)
+    # column_names_row = column_names_row.T
+    # common_columns = df.columns.intersection(mean_df.columns)
+    # mean_df_common = mean_df[common_columns].T
+    # df = df.T
+    # concat_df = pd.concat([column_names_row, df, mean_df_common], ignore_index=True, axis = 1)
+    # concat_df.columns = ['Metric', 'Value', 'Mean_Bestsellers', 'Mean_Canonicals']
+
+    columns_all = [
+    'word_count',
+    'average_wordlen',
+    'msttr',
+    'average_sentlen',
+    'bzipr',
+    'mean_sentiment',
+    'std_sentiment',
+    'mean_sentiment_first_ten_percent',
+    'mean_sentiment_last_ten_percent',
+    'difference_lastten_therest',
+    'arc_mean',
+    'arc_sd',
+    'word_entropy',
+    'bigram_entropy',
+    'approximate_entropy_value',
+    'flesch_grade',
+    'flesch_ease',
+    'smog',
+    'ari',
+    'dale_chall_new'
+]
+
+    columns_all_2 = [
+    'word_count',
+    'average_wordlen',
+    'msttr',
+    'average_sentlen',
+    'bzipr',
+    'mean_sentiment',
+    'std_sentiment',
+    'mean_sentiment_first_ten_percent',
+    'mean_sentiment_last_ten_percent',
+    'difference_lastten_therest',
+    'arc_mean',
+    'arc_sd',
+    'word_entropy',
+    'bigram_entropy',
+    'approximate_entropy_value',
+    'flesch_grade',
+    'flesch_ease',
+    'smog',
+    'ari',
+    'dale_chall_new',
+    'roget_n_tokens',
+    'roget_n_tokens_filtered',
+    'roget_n_cats'
+]   
+
+    column_all_row = pd.DataFrame([columns_all_2], columns=columns_all_2)
+    column_all_row = column_all_row.T
+    mean_df_columns_all = mean_df[columns_all].T
     df = df.T
-    concat_df = pd.concat([column_names_row, df, mean_df_common], ignore_index=True, axis = 1)
+    concat_df = pd.concat([column_all_row, df, mean_df_columns_all], ignore_index=True, axis = 1)
     concat_df.columns = ['Metric', 'Value', 'Mean_Bestsellers', 'Mean_Canonicals']
+    print(concat_df)
+
 
     if language == 'english':
          navbar = html.Div([
