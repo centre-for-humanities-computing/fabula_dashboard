@@ -1,10 +1,13 @@
-from dash import Dash, dcc, html, Input, Output, State, callback, ctx
+from dash import Dash, dcc, html, dash_table, Input, Output, State, callback, ctx
 import dash_bootstrap_components as dbc
+import plotly.graph_objects as go
 from dash_bootstrap_templates import load_figure_template
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
 
 import base64
+import datetime
+import io
 import os
 
 import pandas as pd
@@ -13,11 +16,38 @@ from statistics import stdev
 
 from metrics_function import *
 from dash_utils import *
-from fabulanet_func import *
+# from spacy.cli import download
+# download('en_core_web_sm')
+# download('da_core_news_sm')
+
+quick_mode = 0
 
 load_figure_template("minty")
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+
+# read in mean file
+mean_df = pd.read_csv(os.path.join('data', 'mean.csv'))
+
+style_value_text = {'fontSize': 30, 'textAlign': 'center'}
+style_value_value = {"textAlign": "center", "fontSize": 30}
+style_value_figure = {'display': 'inline-block'}
+style_value_global = {'fontSize': 15, 'textAlign': 'center'}
+
+# personal_palette = ['#5D5EDB', '#D353C2', '#FF5F98', '#FF8D6F', '#FFC45A', '#F9F871']
+# palette_1 = ['#5D5EDB', '#7E79FA', '#9D94FF', '#BDB1FF', '#DDCFFF']  
+# palette_2 = ['#920086', '#D353C2']
+# palette_3 = ['#B20059', '#FF5F98']
+# palette_4 = ['#A9432C', '#FF8D6F']
+# palette_5 = ['#9C6D00', '#FFC45A']
+
+palette_chc = ["#084444","#40a49c", "#40bcb4", "#e8f4f4"]
+palette_1 = ["#40a49c", "#40bcb4", "#e8f4f4"]  
+palette_2 = ["#40a49c", "#e8f4f4"]
+palette_3 = ["#40a49c", "#e8f4f4"]
+palette_4 = ["#40a49c", "#e8f4f4"]
+palette_5 = ["#40a49c", "#e8f4f4"]
+personal_palette = ["#40a49c", "#40bcb4", "#e8f4f4"]
 
 # read in explanation filex
 with open(os.path.join('assets', 'texts', 'metrics_explanation.txt'), 'r') as file:
@@ -49,6 +79,15 @@ SIDEBAR_STYLE = {
     "width": "25%",
     "padding": "2rem 1rem",
     "background-color": "#f8f9fa",
+}
+
+# the styles for the main content position it to the right of the sidebar and
+# add some padding.
+CONTENT_STYLE = {
+    # "margin-left": "420px",
+    # "margin-left": "0px",
+    # "padding-left": "0px",
+    # "padding": "100px",
 }
 
 sidebar = html.Div([
@@ -90,10 +129,14 @@ main_content = html.Div(
         dbc.Row([html.Hr(style = {'margin': '10px'}), dbc.Nav([dbc.NavLink("Home", href="/", active="exact"),], vertical=False, pills=True,), html.Hr(style = {'margin': '10px'}),], id = 'output-data-upload'),
         dcc.Loading(id = 'loading-1', type = 'cube', children = [dcc.Store(id='intermediate-value'), dcc.Store(id='intermediate-value-2', data = 'string'), dcc.Store(id='file_or_text', data = 'string'),], fullscreen = False, style = {'position': 'fixed', 'top': '50%', 'left': '62.5%', 'transform': 'translate(-50%, -50%)'}, color = 'green'),
     ],
+    style = CONTENT_STYLE
 )
 
 page_content = html.Div(id='page-content', style = {'padding': '10px'})
 
+# app.layout = html.Div([
+#     html.Div([sidebar, main_content], className="row")
+# ], className="container-fluid", style={"height": "100vh"})
 app.layout = dbc.Container([
        dcc.Location(id="url"),
        dbc.Row([dbc.Col(sidebar),
@@ -102,6 +145,162 @@ app.layout = dbc.Container([
                   dbc.Row(page_content)
                   ], width = {'size': 9, 'offset': 3})])],
     className="container-fluid", style={}, fluid = True)
+
+def parse_contents(contents, filename, date, language, sentiment, text, fileortext):
+
+    if language is None:
+        print(Exception)
+        return html.Div([dbc.Row([html.Hr(style = {'margin': '10px'}),dbc.Nav([dbc.NavLink("Home", href="/", active="exact"),], vertical=False, pills=True,),html.Hr(style = {'margin': '10px'}),]),]), None, None
+    
+    if sentiment is None:
+        print(Exception)
+        return html.Div([dbc.Row([html.Hr(style = {'margin': '10px'}),dbc.Nav([dbc.NavLink("Home", href="/", active="exact"),], vertical=False, pills=True,),html.Hr(style = {'margin': '10px'}),]),]), None, None
+
+    ### removing syuzhet for render deployment
+    if sentiment == 'syuzhet':
+        sentiment = 'afinn'
+    if sentiment == 'avg_syuzhet_vader':
+        sentiment = 'afinn'
+    ###
+
+    if fileortext == 'file':
+        # if contents == ...:
+        content_type, content_string = contents[0].split(',')
+
+        decoded = base64.b64decode(content_string)
+        try:
+            if 'txt' in filename[0]:
+                full_string = decoded.decode('utf-8')
+        except Exception as e:
+            print(e)
+            return html.Div([
+                'There was an error processing this file.'
+            ])
+        
+    if fileortext == 'text':
+        full_string = text
+
+    dict_0 = compute_metrics(full_string, language, sentiment)
+    print("Done with computing metrics")
+
+    # compute metrics is producing lists in its dict, and don't know what to do with them
+    # so I'm just going to take the mean of all the lists and put them in the dict
+    if language == 'english':
+        if len(dict_0['concreteness']) > 0:
+            dict_0['concreteness_mean'] = mean([i[0] for i in dict_0['concreteness']])
+        if len(dict_0['concreteness']) > 1:
+            dict_0['concreteness_sd'] = stdev([i[0] for i in dict_0['concreteness']])
+        if len(dict_0['valence']) > 0:
+            dict_0['valence_mean'] = mean([float(i[0]) for i in dict_0['valence']])
+        if len(dict_0['valence']) > 1:
+            dict_0['valence_sd'] = stdev([float(i[0]) for i in dict_0['valence']])
+        if len(dict_0['arousal']) > 0:
+            dict_0['arousal_mean'] = mean([float(i[0]) for i in dict_0['arousal']])
+        if len(dict_0['arousal']) > 1:
+            dict_0['arousal_sd'] = stdev([float(i[0]) for i in dict_0['arousal']])
+        if len(dict_0['dominance']) > 0:
+            dict_0['dominance_mean'] = mean([float(i[0][:-3]) for i in dict_0['dominance']])
+        if len(dict_0['dominance']) > 1:
+            dict_0['dominance_sd'] = stdev([float(i[0][:-3]) for i in dict_0['dominance']])
+    
+    if 'arc' in dict_0:
+        if len(dict_0['arc']) > 0:
+            dict_0['arc_mean'] = mean(dict_0['arc'])
+        if len(dict_0['arc']) > 1:
+            dict_0['arc_sd'] = stdev(dict_0['arc'])
+    if 'mean_sentiment_per_segment' in dict_0:
+        dict_0['mean_sentiment_per_segment_mean'] = mean(dict_0['mean_sentiment_per_segment'])
+        dict_0['mean_sentiment_per_segment_sd'] = stdev(dict_0['mean_sentiment_per_segment'])
+    if 'approximate_entropy' in dict_0:
+        dict_0['approximate_entropy_value'] = dict_0['approximate_entropy'][0]
+
+    dict_1 = {k: [v] for k, v in dict_0.items() if k not in ['concreteness', 'valence', 'arousal', 'dominance', 'arc', 'mean_sentiment_per_segment', 'approximate_entropy']}
+
+    df = pd.DataFrame(dict_1)
+    for col in df.columns:
+        if df[col].dtype == 'int64':
+            df[col] = df[col].astype(float)
+
+    column_names_row = pd.DataFrame([df.columns], columns=df.columns)
+    column_names_row = column_names_row.T
+    common_columns = df.columns.intersection(mean_df.columns)
+    mean_df_common = mean_df[common_columns].T
+    df = df.T
+    concat_df = pd.concat([column_names_row, df, mean_df_common], ignore_index=True, axis = 1)
+    concat_df.columns = ['Metric', 'Value', 'Mean_Bestsellers', 'Mean_Canonicals']
+    # use only specified rows from concat_df
+    # style_df = concat_df[concat_df['Metric'].isin(['word_count', 'average_wordlen', 'msttr', 'average_sentlen', 'bzipr'])]
+    # sent_df = concat_df[concat_df['Metric'].isin(['mean_sentiment', 'std_sentiment', 'mean_sentiment_first_ten_percent', 'mean_sentiment_last_ten_percent', 'difference_lastten_therest', 'arc_mean', 'arc_sd', 'mean_sentiment_per_segment_mean', 'mean_sentiment_per_segment_sd'])]
+    # entropy_df = concat_df[concat_df['Metric'].isin(['word_entropy', 'bigram_entropy', 'approximate_entropy_value'])]
+    # read_df = concat_df[concat_df['Metric'].isin(['flesch_grade', 'flesch_ease', 'smog', 'ari', 'dale_chall_new'])]
+    # roget_df = concat_df[concat_df['Metric'].isin(['roget_n_tokens', 'roget_n_tokens_filtered', 'roget_n_cats'])]
+
+    if language == 'english':
+         navbar = html.Div([
+              dbc.Row([
+                   html.Hr(style = {'margin': '10px'}),  # horizontal line
+                   dbc.Nav([
+                        dbc.NavLink("Home", href="/", active="exact"),
+                        dbc.NavLink("Stylometrics", href="/styl", active="exact"),
+                        dbc.NavLink("Sentiment", href="/sent", active="exact"),
+                        dbc.NavLink("Entropy", href="/entro", active="exact"),
+                        dbc.NavLink("Readability", href="/read", active="exact"),
+                        dbc.NavLink("Roget", href="/roget", active="exact"),
+                        dbc.NavLink("About", href="/about", active="exact"),
+                        ], vertical=False, pills=True,),
+                    html.Hr(style = {'margin': '10px'}),  # horizontal line
+                    ]),
+                ])
+    
+    if language == 'danish':
+         navbar = html.Div([
+              dbc.Row([
+                   html.Hr(style = {'margin': '10px'}),  # horizontal line
+                   dbc.Nav([
+                        dbc.NavLink("Home", href="/", active="exact"),
+                        dbc.NavLink("Stylometrics", href="/styl", active="exact"),
+                        dbc.NavLink("Sentiment", href="/sent", active="exact"),
+                        dbc.NavLink("Entropy", href="/entro", active="exact"),
+                        ], vertical=False, pills=True,),
+                    html.Hr(style = {'margin': '10px'}),  # horizontal line
+                    ]),
+                ])
+
+    return navbar, concat_df.to_dict(), full_string
+
+# def quick_parse():
+
+#     # read csv
+#     concat_df = pd.read_csv('data/output.csv')
+
+#     # use only specified rows from concat_df
+#     style_df = concat_df[concat_df['Metric'].isin(['word_count', 'average_wordlen', 'msttr', 'average_sentlen', 'bzipr'])]
+#     sent_df = concat_df[concat_df['Metric'].isin(['mean_sentiment', 'std_sentiment', 'mean_sentiment_first_ten_percent', 'mean_sentiment_last_ten_percent', 'difference_lastten_therest', 'arc_mean', 'arc_sd', 'mean_sentiment_per_segment_mean', 'mean_sentiment_per_segment_sd'])]
+#     entropy_df = concat_df[concat_df['Metric'].isin(['word_entropy', 'bigram_entropy', 'approximate_entropy_value'])]
+#     read_df = concat_df[concat_df['Metric'].isin(['flesch_grade', 'flesch_ease', 'smog', 'ari', 'dale_chall_new'])]
+#     roget_df = concat_df[concat_df['Metric'].isin(['roget_n_tokens', 'roget_n_tokens_filtered', 'roget_n_cats'])]
+
+#     return html.Div([
+        
+#         dbc.Row([
+#             html.Hr(),  # horizontal line
+
+#             html.Hr(),  # horizontal line
+#         ]),
+
+#         dbc.Row([
+#              dbc.Nav([
+#                 dbc.NavLink("Home", href="/", active="exact"),
+#                 dbc.NavLink("Stylometrics", href="/styl", active="exact"),
+#                 dbc.NavLink("Sentiment", href="/sent", active="exact"),
+#                 dbc.NavLink("Entropy", href="/entro", active="exact"),
+#                 dbc.NavLink("Readabnility", href="/read", active="exact"),
+#                 dbc.NavLink("Roget", href="/roget", active="exact"),
+#              ], vertical=False, pills=True)
+#         ]),
+
+#     html.Hr(),  # horizontal line
+# ])
 
 @app.callback(
     Output("lang-dropdown", "style"),
@@ -141,55 +340,55 @@ def update_options(value):
     else:
         raise PreventUpdate
 
-# @app.callback(
-#     Output("collapse_1", "is_open"),
-#     [Input("collapse-button_1", "n_clicks")],
-#     [State("collapse_1", "is_open")],
-# )
-# def toggle_collapse_1(n, is_open):
-#     if n:
-#         return not is_open
-#     return is_open
+@app.callback(
+    Output("collapse_1", "is_open"),
+    [Input("collapse-button_1", "n_clicks")],
+    [State("collapse_1", "is_open")],
+)
+def toggle_collapse_1(n, is_open):
+    if n:
+        return not is_open
+    return is_open
 
-# @app.callback(
-#     Output("collapse_2", "is_open"),
-#     [Input("collapse-button_2", "n_clicks")],
-#     [State("collapse_2", "is_open")],
-# )
-# def toggle_collapse_2(n, is_open):
-#     if n:
-#         return not is_open
-#     return is_open
+@app.callback(
+    Output("collapse_2", "is_open"),
+    [Input("collapse-button_2", "n_clicks")],
+    [State("collapse_2", "is_open")],
+)
+def toggle_collapse_2(n, is_open):
+    if n:
+        return not is_open
+    return is_open
 
-# @app.callback(
-#     Output("collapse_3", "is_open"),
-#     [Input("collapse-button_3", "n_clicks")],
-#     [State("collapse_3", "is_open")],
-# )
-# def toggle_collapse_3(n, is_open):
-#     if n:
-#         return not is_open
-#     return is_open
+@app.callback(
+    Output("collapse_3", "is_open"),
+    [Input("collapse-button_3", "n_clicks")],
+    [State("collapse_3", "is_open")],
+)
+def toggle_collapse_3(n, is_open):
+    if n:
+        return not is_open
+    return is_open
 
-# @app.callback(
-#     Output("collapse_4", "is_open"),
-#     [Input("collapse-button_4", "n_clicks")],
-#     [State("collapse_4", "is_open")],
-# )
-# def toggle_collapse_4(n, is_open):
-#     if n:
-#         return not is_open
-#     return is_open
+@app.callback(
+    Output("collapse_4", "is_open"),
+    [Input("collapse-button_4", "n_clicks")],
+    [State("collapse_4", "is_open")],
+)
+def toggle_collapse_4(n, is_open):
+    if n:
+        return not is_open
+    return is_open
 
-# @app.callback(
-#     Output("collapse_5", "is_open"),
-#     [Input("collapse-button_5", "n_clicks")],
-#     [State("collapse_5", "is_open")],
-# )
-# def toggle_collapse_5(n, is_open):
-#     if n:
-#         return not is_open
-#     return is_open
+@app.callback(
+    Output("collapse_5", "is_open"),
+    [Input("collapse-button_5", "n_clicks")],
+    [State("collapse_5", "is_open")],
+)
+def toggle_collapse_5(n, is_open):
+    if n:
+        return not is_open
+    return is_open
 
 @callback(Output('file_or_text', 'data'),
           Input('upload-data', 'filename'),
@@ -200,30 +399,62 @@ def file_or_text(filename, text):
     if ctx.triggered_id == 'textarea-example':
         return 'text'
 
-@callback(Output('output-data-upload', 'children'),
-            Output('intermediate-value', 'data'),
-            Output('intermediate-value-2', 'data'),
-            State('upload-data', 'contents'),
-            State('upload-data', 'filename'),
-            State('lang-dropdown', 'value'),
-            State('sent-dropdown', 'value'),
-            State('textarea-example', 'value'),
-            State('file_or_text', 'data'),
-            Input('submit-val', 'n_clicks'),
-            prevent_initial_call=True)
-def update_output(list_of_contents, list_of_names, language, sentiment, text, fileortext, n_clicks):
-    if language is None:
-        raise PreventUpdate
+if quick_mode == 1:
+    @callback(Output('output-data-upload', 'children'),
+              Output('intermediate-value', 'data'),
+              Input('submit-val', 'n_clicks'),
+              prevent_initial_call=True)
+    def update_output(n_clicks):
+        return quick_parse(), pd.read_csv(os.path.join('data', 'output.csv')).to_dict()
+else:
+    @callback(Output('output-data-upload', 'children'),
+              Output('intermediate-value', 'data'),
+              Output('intermediate-value-2', 'data'),
+                State('upload-data', 'contents'),
+                State('upload-data', 'filename'),
+                State('upload-data', 'last_modified'),
+                State('lang-dropdown', 'value'),
+                State('sent-dropdown', 'value'),
+                State('textarea-example', 'value'),
+                State('file_or_text', 'data'),
+                Input('submit-val', 'n_clicks'),
+                prevent_initial_call=True)
+    def update_output(list_of_contents, list_of_names, list_of_dates, language, sentiment, text, fileortext, n_clicks):
+        if language is None:
+            raise PreventUpdate
 
-    if sentiment is None:
-        raise PreventUpdate
-    
-    if n_clicks > 0:
-        if list_of_contents is not None or text is not None:
-            children, data, text_string = parse_contents(list_of_contents, list_of_names, language, sentiment, text, fileortext)
+        if sentiment is None:
+            raise PreventUpdate
+        
+        if n_clicks > 0:
+            if list_of_contents is not None or text is not None:
+                children, data, text_string = parse_contents(list_of_contents, list_of_names, list_of_dates, language, sentiment, text, fileortext)
 
-            return children, data, text_string
+                return children, data, text_string
+            
+            # if text is not None:
+            #     children = parse_contents(text, list_of_names[0], list_of_dates[0], language, sentiment, text)
 
+            #     return children
+
+# @callback(Output('output-data-upload', 'children'),
+#             Output('intermediate-value', 'data'),
+#             Output('intermediate-value-2', 'data'),
+#             State('upload-data', 'contents'),
+#             State('upload-data', 'filename'),
+#             State('upload-data', 'last_modified'),
+#             State('lang-dropdown', 'value'),
+#             State('sent-dropdown', 'value'),
+#             State('textarea-example', 'value'),
+#             Input('submit-val', 'n_clicks'),
+#             prevent_initial_call=True)
+# def update_output(list_of_contents, list_of_names, list_of_dates, language, sentiment, text, n_clicks):
+#     if n_clicks > 0:
+#         print(ctx.inputs)
+#         if list_of_contents is not None:
+#             children, data, text_string = parse_contents(list_of_contents[0], list_of_names[0], list_of_dates[0], language, sentiment, text)
+
+#             return children, data, text_string
 
 @callback(Output("page-content", "children"),
           Input("url", "pathname"),
@@ -319,6 +550,12 @@ def render_page_content(pathname, data, n_clicks, contents, text, language, sent
             html.P("Welcome to Fabula-NET", style = {'fontSize': 50, 'textAlign': 'center', 'margin': '10px'}),
             html.P(dcc.Markdown(home_page_text), style = {'fontSize': 20, 'textAlign': 'left', 'margin': '10px'}),])
 
+# @callback(Output('output-data-upload', 'children'),
+#           Input('intermediate-value', 'data'))
+# def return_func(data):
+#     return data
+            
+
 if __name__ == '__main__':
     # app.run(debug=True)
-    app.run(debug=True)
+    app.run(debug=False)
