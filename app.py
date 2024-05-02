@@ -28,8 +28,6 @@ with open(os.path.join('assets', 'texts', 'stylometrics_explanations.txt'), 'r')
             stylometrics_explanation_text = file.read()
 with open(os.path.join('assets', 'texts', 'sentiment_explanations.txt'), 'r') as file:
             sentiment_explanation_text = file.read()
-with open(os.path.join('assets', 'texts', 'entropy_explanations.txt'), 'r') as file:
-            entropy_explanation_text = file.read()
 with open(os.path.join('assets', 'texts', 'readability_explanations.txt'), 'r') as file:
             readability_explanation_text = file.read()
 with open(os.path.join('assets', 'texts', 'roget_explanations.txt'), 'r') as file:
@@ -250,9 +248,8 @@ def render_page_content(pathname, data, n_clicks, contents, text, language, sent
                 concat_df = pd.DataFrame.from_dict(data)
 
                 # use only specified rows from concat_df
-                style_df = concat_df[concat_df['Metric'].isin(['word_count', 'average_wordlen', 'msttr', 'average_sentlen', 'bzipr'])]
-                sent_df = concat_df[concat_df['Metric'].isin(['mean_sentiment', 'std_sentiment', 'mean_sentiment_first_ten_percent', 'mean_sentiment_last_ten_percent', 'difference_lastten_therest', 'arc_mean', 'arc_sd', 'mean_sentiment_per_segment_mean', 'mean_sentiment_per_segment_sd'])]
-                entropy_df = concat_df[concat_df['Metric'].isin(['word_entropy', 'bigram_entropy', 'approximate_entropy_value'])]
+                style_df = concat_df[concat_df['Metric'].isin(['word_count', 'average_wordlen', 'msttr', 'average_sentlen', 'bzipr', 'word_entropy', 'bigram_entropy'])]
+                sent_df = concat_df[concat_df['Metric'].isin(['mean_sentiment', 'std_sentiment', 'mean_sentiment_first_ten_percent', 'mean_sentiment_last_ten_percent', 'difference_lastten_therest', 'arc_mean', 'arc_sd', 'mean_sentiment_per_segment_mean', 'mean_sentiment_per_segment_sd', 'hurst', 'approximate_entropy_value'])]
                 read_df = concat_df[concat_df['Metric'].isin(['flesch_grade', 'flesch_ease', 'smog', 'ari', 'dale_chall_new'])]
                 roget_df = concat_df[concat_df['Metric'].isin(['roget_n_tokens', 'roget_n_tokens_filtered', 'roget_n_cats'])]
 
@@ -265,13 +262,10 @@ def render_page_content(pathname, data, n_clicks, contents, text, language, sent
                         dbc.Row([html.P(children=['First 500 characters:'], className="fw-bold fs-10"),html.P(children=[full_string[:500], '...']), html.Hr()]),
                         styl_func(style_df=style_df, stylometrics_explanation_text=stylometrics_explanation_text)])
                 elif pathname == "/sent":
+                    print(sent_df)
                     return html.Div([
                         dbc.Row([html.P(children=['First 500 characters:'], className="fw-bold fs-10"),html.P(children=[full_string[:500], '...']), html.Hr()]),
                         sent_func(sent_df=sent_df, sentiment_explanation_text=sentiment_explanation_text)])
-                elif pathname == "/entro":
-                    return html.Div([
-                        dbc.Row([html.P(children=['First 500 characters:'], className="fw-bold fs-10"),html.P(children=[full_string[:500], '...']), html.Hr()]),
-                        entro_func(entropy_df=entropy_df, entropy_explanation_text=entropy_explanation_text)])
                 elif pathname == "/read":
                     return html.Div([
                         dbc.Row([html.P(children=['First 500 characters:'], className="fw-bold fs-10"),html.P(children=[full_string[:500], '...']), html.Hr()]),
@@ -286,9 +280,8 @@ def render_page_content(pathname, data, n_clicks, contents, text, language, sent
                 concat_df = pd.DataFrame.from_dict(data)
 
                 # use only specified rows from concat_df
-                style_df = concat_df[concat_df['Metric'].isin(['word_count', 'average_wordlen', 'msttr', 'average_sentlen', 'bzipr'])]
-                sent_df = concat_df[concat_df['Metric'].isin(['mean_sentiment', 'std_sentiment', 'mean_sentiment_first_ten_percent', 'mean_sentiment_last_ten_percent', 'difference_lastten_therest', 'arc_mean', 'arc_sd', 'mean_sentiment_per_segment_mean', 'mean_sentiment_per_segment_sd'])]
-                entropy_df = concat_df[concat_df['Metric'].isin(['word_entropy', 'bigram_entropy', 'approximate_entropy_value'])]
+                style_df = concat_df[concat_df['Metric'].isin(['word_count', 'average_wordlen', 'msttr', 'average_sentlen', 'bzipr', 'word_entropy', 'bigram_entropy'])]
+                sent_df = concat_df[concat_df['Metric'].isin(['mean_sentiment', 'std_sentiment', 'mean_sentiment_first_ten_percent', 'mean_sentiment_last_ten_percent', 'difference_lastten_therest', 'arc_mean', 'arc_sd', 'mean_sentiment_per_segment_mean', 'mean_sentiment_per_segment_sd', 'hurst', 'approximate_entropy_value'])]
 
                 if pathname == "/":
                     return html.Div([
@@ -302,10 +295,6 @@ def render_page_content(pathname, data, n_clicks, contents, text, language, sent
                     return html.Div([
                         dbc.Row([html.P(children=['First 500 characters:'], className="fw-bold fs-10"),html.P(children=[full_string[:500], '...']), html.Hr()]),
                         sent_func(sent_df=sent_df, sentiment_explanation_text=sentiment_explanation_text)])
-                elif pathname == "/entro":
-                    return html.Div([
-                        dbc.Row([html.P(children=['First 500 characters:'], className="fw-bold fs-10"),html.P(children=[full_string[:500], '...']), html.Hr()]),
-                        entro_func(entropy_df=entropy_df, entropy_explanation_text=entropy_explanation_text)])
                 elif pathname == "/about":
                      return html.Div(["Add further information about metrics and stuff here"])
         # If the user tries to reach a different page, return a 404 message

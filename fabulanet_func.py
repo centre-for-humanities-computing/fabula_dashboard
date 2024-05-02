@@ -108,7 +108,8 @@ def parse_contents(contents, filename, language, sentiment, text, fileortext):
     'mean_sentiment_last_ten_percent',
     'difference_lastten_therest',
     'arc_mean',
-    'arc_sd',
+    'arc_sd', 
+    'hurst',
     'word_entropy',
     'bigram_entropy',
     'approximate_entropy_value',
@@ -132,6 +133,7 @@ def parse_contents(contents, filename, language, sentiment, text, fileortext):
     'difference_lastten_therest',
     'arc_mean',
     'arc_sd',
+    'hurst',
     'word_entropy',
     'bigram_entropy',
     'approximate_entropy_value',
@@ -151,8 +153,6 @@ def parse_contents(contents, filename, language, sentiment, text, fileortext):
     df = df.T
     concat_df = pd.concat([column_all_row, df, mean_df_columns_all], ignore_index=True, axis = 1)
     concat_df.columns = ['Metric', 'Value', 'Mean_Bestsellers', 'Mean_Canonicals']
-    print(concat_df)
-
 
     if language == 'english':
          navbar = html.Div([
@@ -162,7 +162,6 @@ def parse_contents(contents, filename, language, sentiment, text, fileortext):
                         dbc.NavLink("Home", href="/", active="exact"),
                         dbc.NavLink("Stylometrics", href="/styl", active="exact"),
                         dbc.NavLink("Sentiment", href="/sent", active="exact"),
-                        dbc.NavLink("Entropy", href="/entro", active="exact"),
                         dbc.NavLink("Readability", href="/read", active="exact"),
                         dbc.NavLink("Roget", href="/roget", active="exact"),
                         dbc.NavLink("About", href="/about", active="exact"),
@@ -179,7 +178,6 @@ def parse_contents(contents, filename, language, sentiment, text, fileortext):
                         dbc.NavLink("Home", href="/", active="exact"),
                         dbc.NavLink("Stylometrics", href="/styl", active="exact"),
                         dbc.NavLink("Sentiment", href="/sent", active="exact"),
-                        dbc.NavLink("Entropy", href="/entro", active="exact"),
                         ], vertical=False, pills=True,),
                     html.Hr(style = {'margin': '10px'}),  # horizontal line
                     ]),
