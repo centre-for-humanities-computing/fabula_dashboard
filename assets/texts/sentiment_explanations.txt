@@ -1,4 +1,6 @@
-#### **Mean Sentiment**: A sentiment scores is calculated for each sentence in the text, and then the avergae is taken across sentences. The method used for sentiment scoring is either afinn, vader, syuzhet, or a combination between vader and syuzhet.
-#### **Mean Sentiment (First 10%)**: The average sentiment score for the sentences in the first 10% of the text.
-#### **Mean Sentiment (Last 10%)**: The average sentiment score for the sentences in the first 10% of the text.
-#### **Difference between last 10% and the rest**: The difference in sentiment between the average of the last 10% and the average of the remaining 90% of the text.
+#### **Mean Sentiment**: Mean sentiment of the text, as averaged on the texts’ sentences. The method used for sentiment scoring is either afinn, vader, syuzhet, or a combination between vader and syuzhet
+#### **Mean Sentiment (First 10%)**: Average sentiment score in the first 10% of the text
+#### **Mean Sentiment (Last 10%)**: Average sentiment score in the last 10% of the text
+#### **Difference between last 10% and the rest**: Difference in sentiment between the last 10% and the remaining 90% of the text – if the ending displays a strong change in sentiment
+#### **Hurst**: Measure of fractality or long-term memory of the sentiment arc. It is a “tidal measure” showing how predictable/coherent the story is. Closer to 1: more coherent. Closer to 0.5: more chaotic. Closer to 0: mean-reverting
+#### **Approximate Entropy**: Measure of the amount of structure in the sentiment line at a local level. If small trends or segments tend to be repeated, the App Ent is lower
