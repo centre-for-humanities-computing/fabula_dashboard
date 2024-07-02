@@ -30,8 +30,8 @@ with open(os.path.join('assets', 'texts', 'sentiment_explanations.txt'), 'r') as
             sentiment_explanation_text = file.read()
 with open(os.path.join('assets', 'texts', 'readability_explanations.txt'), 'r') as file:
             readability_explanation_text = file.read()
-with open(os.path.join('assets', 'texts', 'roget_explanations.txt'), 'r') as file:
-            roget_explanation_text = file.read()
+# with open(os.path.join('assets', 'texts', 'roget_explanations.txt'), 'r') as file:
+#             roget_explanation_text = file.read()
 with open(os.path.join('assets', 'texts', 'home_page.txt'), 'r') as file:
             home_page_text = file.read()
 
@@ -63,14 +63,15 @@ sidebar = html.Div([
     dcc.Dropdown(options=[{'value': 'canonical', 'label': 'Canonical'}, {'value': 'bestseller', 'label': 'Bestseller'}], id='group-dropdown', placeholder="Select a Group", searchable = False, style = {'color': 'black'}, multi = True),
     html.Br(),
     html.H3(children='Upload File', style={'margin-top': '50px'}, className="fw-bold"),
-    dcc.Upload(id='upload-data', children=html.Div(['Drag and Drop or ', html.A('Select Files (.txt)')]), style={'width': '100%',
+    dcc.Upload(id='upload-data', children=html.Div(['Drag and Drop or ', html.A('Select Files (.txt or .docx)')]), style={'width': '100%',
                                                                                                           'height': '120px', 
                                                                                                           'lineHeight': '120px',
                                                                                                           'borderWidth': '1px',
                                                                                                           'borderStyle': 'dashed',
                                                                                                           'borderRadius': '5px',
                                                                                                           'textAlign': 'center',
-                                                                                                          'margin': '10px 20px 0px 0px'},multiple=True),
+                                                                                                          'margin': '10px 20px 0px 0px'},multiple=False),
+    html.Div(id='file-upload-status'),
     html.Br(),
     html.H3(children='Write Text', style={'margin-top': '50px'}, className="fw-bold"),
     dcc.Textarea(id='textarea-example',value=None,style={'width': '100%', 
@@ -141,6 +142,18 @@ def update_options(value):
         return [{'label':'Afinn', 'value': 'afinn'}]
     else:
         raise PreventUpdate
+
+@callback(
+    Output('file-upload-status', 'children'),
+    Input('upload-data', 'filename')
+)
+def update_output(uploaded_filename):
+    if uploaded_filename is not None:
+        # Handling multiple file uploads
+        file_status = html.Div(f'File "{uploaded_filename}" has been successfully uploaded.')
+        return file_status
+    else:
+        return 'No file has been uploaded.'
 
 @callback(
     Output("collapse_1", "is_open"),
@@ -251,7 +264,7 @@ def render_page_content(pathname, data, n_clicks, contents, text, language, sent
                 style_df = concat_df[concat_df['Metric'].isin(['word_count', 'average_wordlen', 'msttr', 'average_sentlen', 'bzipr', 'word_entropy', 'bigram_entropy'])]
                 sent_df = concat_df[concat_df['Metric'].isin(['mean_sentiment', 'std_sentiment', 'mean_sentiment_first_ten_percent', 'mean_sentiment_last_ten_percent', 'difference_lastten_therest', 'arc_mean', 'arc_sd', 'mean_sentiment_per_segment_mean', 'mean_sentiment_per_segment_sd', 'hurst', 'approximate_entropy_value'])]
                 read_df = concat_df[concat_df['Metric'].isin(['flesch_grade', 'flesch_ease', 'smog', 'ari', 'dale_chall_new'])]
-                roget_df = concat_df[concat_df['Metric'].isin(['roget_n_tokens', 'roget_n_tokens_filtered', 'roget_n_cats'])]
+                #roget_df = concat_df[concat_df['Metric'].isin(['roget_n_tokens', 'roget_n_tokens_filtered', 'roget_n_cats'])]
 
                 if pathname == "/":
                     return html.Div([
@@ -270,10 +283,10 @@ def render_page_content(pathname, data, n_clicks, contents, text, language, sent
                     return html.Div([
                         dbc.Row([html.P(children=['First 500 characters:'], className="fw-bold fs-10"),html.P(children=[full_string[:500], '...']), html.Hr()]),
                         read_func(read_df=read_df, readability_explanation_text=readability_explanation_text)])
-                elif pathname == "/roget":
-                    return html.Div([
-                        dbc.Row([html.P(children=['First 500 characters:'], className="fw-bold fs-10"),html.P(children=[full_string[:500], '...']), html.Hr()]),
-                        roget_func(roget_df=roget_df, roget_explanation_text=roget_explanation_text)])
+                # elif pathname == "/roget":
+                #     return html.Div([
+                #         dbc.Row([html.P(children=['First 500 characters:'], className="fw-bold fs-10"),html.P(children=[full_string[:500], '...']), html.Hr()]),
+                #         roget_func(roget_df=roget_df, roget_explanation_text=roget_explanation_text)])
                 elif pathname == "/about":
                      return html.Div(["Add further information about metrics and stuff here"])
             if language == 'danish':

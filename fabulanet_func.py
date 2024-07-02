@@ -1,6 +1,7 @@
 from dash import html
 import dash_bootstrap_components as dbc
 import base64
+from docx import Document
 
 import pandas as pd
 from statistics import mean 
@@ -28,18 +29,33 @@ def parse_contents(contents, filename, language, sentiment, text, fileortext):
 
     if fileortext == 'file':
         # if contents == ...:
-        content_type, content_string = contents[0].split(',')
+        content_type, content_string = contents.split(',')
 
         decoded = base64.b64decode(content_string)
-        try:
-            if 'txt' in filename[0]:
-                full_string = decoded.decode('utf-8')
-        except Exception as e:
-            print(e)
-            return html.Div([
-                'There was an error processing this file.'
-            ])
-        
+        # try:
+        #     if 'txt' in filename[0]:
+        #         full_string = decoded.decode('utf-8')
+        # except Exception as e:
+        #     print(e)
+        #     return html.Div([
+        #         'There was an error processing this file.'
+        #     ])
+        if filename.endswith('.txt'):
+            try:
+                full_string = io.StringIO(decoded.decode('utf-8')).read()
+            except Exception as e:
+                return f'There was an error processing this file: {e}'
+        elif filename.endswith('.docx'):
+            try:
+                document = Document(io.BytesIO(decoded))
+                full_string = '\n'.join([paragraph.text for paragraph in document.paragraphs])
+            except Exception as e:
+                return f'There was an error processing this file: {e}'
+        else:
+            return 'Unsupported file type'
+    
+    print(full_string)
+
     if fileortext == 'text':
         full_string = text
 
@@ -163,7 +179,7 @@ def parse_contents(contents, filename, language, sentiment, text, fileortext):
                         dbc.NavLink("Stylometrics", href="/styl", active="exact"),
                         dbc.NavLink("Sentiment", href="/sent", active="exact"),
                         dbc.NavLink("Readability", href="/read", active="exact"),
-                        dbc.NavLink("Roget", href="/roget", active="exact"),
+                        #dbc.NavLink("Roget", href="/roget", active="exact"),
                         dbc.NavLink("About", href="/about", active="exact"),
                         ], vertical=False, pills=True,),
                     html.Hr(style = {'margin': '10px'}),  # horizontal line
