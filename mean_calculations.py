@@ -34,9 +34,9 @@ df['arc_mean'] = df['ARC_SEGMENTS_MEANS'].map(mean_float)
 df['arc_sd'] = df['ARC_SEGMENTS_MEANS'].map(sd_float)
 
 # subset rows with a 1 in the 'BESTSELLERS' column or in the 'CANON_ALL' column
-df = df[(df['BESTSELLERS'] == 1) | (df['CANON_ALL'] == 1)]
+#df = df[(df['BESTSELLERS'] == 1) | (df['CANON_ALL'] == 1)]
 
-df_subset = df.loc[:,['BESTSELLERS','CANON_ALL','TITLE_LENGTH', 'HURST', 'APPENT', 'WORDCOUNT', 
+df_subset = df.loc[:,['TITLE_LENGTH', 'HURST', 'APPENT', 'WORDCOUNT', 
                        'SENTENCE_LENGTH', 'BZIP_NEW', 'MSTTR-100', 
                        'BZIP_TXT', 'READABILITY_FLESCH_GRADE', 
                        'READABILITY_FLESCH_EASE', 'READABILITY_SMOG',
@@ -63,10 +63,8 @@ df_subset = df.loc[:,['BESTSELLERS','CANON_ALL','TITLE_LENGTH', 'HURST', 'APPENT
                        'NOMINAL_VERB_RATIO','APPENT_SYUZHET','mean_con','mean_val',
                        'mean_aro','mean_dom','std_con','std_val','std_aro','std_dom', 'arc_mean', 'arc_sd']]
 
-# choose 
-
 # change column names to be more descriptive
-df_subset.columns = ['BESTSELLERS','CANON_ALL','TITLE_LENGTH', 'hurst','approximate_entropy_value', 'word_count', 
+df_subset.columns = ['TITLE_LENGTH', 'hurst','approximate_entropy_value', 'word_count', 
                        'average_sentlen', 'bzipr', 'msttr', 
                        'BZIP_TXT', 'flesch_grade', 
                        'flesch_ease', 'smog',
@@ -93,21 +91,40 @@ df_subset.columns = ['BESTSELLERS','CANON_ALL','TITLE_LENGTH', 'hurst','approxim
                        'NOMINAL_VERB_RATIO','APPENT_SYUZHET','concreteness_mean','valence_mean',
                        'arousal_mean','dominance_mean','concreteness_sd','valence_sd','arousal_sd','dominance_sd', 'arc_mean', 'arc_sd']
 
+column_names = ['BESTSELLERS','CANON_ALL', 'PULITZER', 'NBA', 'HUGO', 'GOODREADS_CLASSICS', 'OPENSYLLABUS', 'NORTON_ENGLISH', 
+                'NORTON_AMERICAN', 'GOODREADS_BEST_20TH_CENTURY', 'NOBEL', 'NEBULA', 'LOCUS_HORROR', 'LOCUS_FANTASY', 'LOCUS_SCIFI',
+                'BRAM_STOKER_AWARD', 'BFA', 'EDGAR_AWARDS', 'ROMANTIC_AWARDS', 'WORLD_FANTASY_AWARD', 'MYTHOPOEIC_AWARDS',
+                'PHILIP_K_DICK_AWARD','J_W_CAMPBELL_AWARD','PROMETHEUS_AWARD', 'PENGUIN_CLASSICS_SERIES_TITLEBASED', 'PENGUIN_CLASSICS_SERIES_AUTHORBASED',
+                'SCIFI_AWARDS', 'FANTASY_AWARDS', 'HORROR_AWARDS', 'PUBLISHERS_WEEKLY_BESTSELLERS', 'NYT_BESTSELLERS', 'PRIZES',
+                'NORTON', 'CANON', 'PENGUIN_CL', 'NONCANON']
 
+def calculate_means(df, df_subset, column_names):
+   """
+   Takes a DataFrame and a list of column names, calculates the mean for each column,
+   and returns a new DataFrame with one row per column name and the number of columns
+   corresponding to the number of columns in df_subset.
+   
+   Parameters:
+   - df: pandas DataFrame containing the data
+   - df_subset: pandas DataFrame containing the subset of data
+   - column_names: list of column names to calculate means for
+   
+   Returns:
+   - mean_df: pandas DataFrame with one row per column name and the number of columns
+            corresponding to the number of columns in df_subset
+   """
+   # Calculate means for each specified column
+   means = {column: df_subset[df[column] == 1].mean() for column in column_names}
+   
+   # Convert the dictionary of means into a DataFrame
+   mean_df = pd.DataFrame(means).T
+   
+   return mean_df
 
-mean_best = df_subset[(df['BESTSELLERS'] == 1)].mean()
-mean_canon = df_subset[(df['CANON_ALL'] == 1)].mean()
-# save the mean to a new dataframe with the old column names and one row wth the mean
-mean_df_best = pd.DataFrame(mean_best, columns=['Mean_Best'])
-mean_df_best = mean_df_best.T
-mean_df_canon = pd.DataFrame(mean_canon, columns=['Mean_Cano'])
-mean_df_canon = mean_df_canon.T
-
-# concatenate the two dataframes
-mean_df = pd.concat([mean_df_best, mean_df_canon])
-
-# remove the columns BESTSELLERS and CANON_ALL
-mean_df = mean_df.drop(columns=['BESTSELLERS', 'CANON_ALL'])
+mean_df = calculate_means(df, df_subset, column_names)
 
 # save the mean dataframe to a csv file
 mean_df.to_csv(os.path.join('data', 'mean.csv'))
+
+# save the subset dataframe to a csv file
+df_subset.to_csv(os.path.join('data', 'df_subset.csv'))

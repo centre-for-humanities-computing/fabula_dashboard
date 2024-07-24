@@ -45,6 +45,84 @@ def create_fig(metric, metric_format, title_1, title_2):
 
     return fig
 
+from scipy.stats import gaussian_kde
+import numpy as np
+
+def distribution_fig(metric, df_result):
+    # read csv
+    df = pd.read_csv(os.path.join('data', 'df_subset.csv'))
+
+    data = df[metric].dropna()  # Ensure no NaN values
+
+    # Create the figure
+    fig = go.Figure()
+
+    # Calculate the KDE
+    kde = gaussian_kde(data)
+    x_range = np.linspace(data.min(), data.max(), 500)
+    kde_values = kde(x_range)
+
+    # Add line plot for the KDE
+    fig.add_trace(go.Scatter(x=x_range, y=kde_values, mode='lines', name='Density', marker=dict(color='black')))
+
+    # Add scatter plot for specific points
+    y_value = kde(df_result[df_result['Metric'] == metric]['Value'])
+    fig.add_trace(go.Scatter(x=df_result[df_result['Metric'] == metric]['Value'], y=y_value, mode='markers', marker=dict(color='red', size=10, line=dict(color='black', width=1)), name='Your Value'))
+    
+    # Add scatter plot for specific points
+    for group in df_result.drop(['Metric', 'Value'], axis = 1).columns:
+        group_data = df_result[df_result['Metric'] == metric][group]
+        y_values = kde(group_data)
+        fig.add_trace(go.Scatter(x=group_data, y=y_values, mode='markers', marker=dict(size=10, line=dict(color='black', width=1)), name=group))
+
+    # Customize layout to remove grid
+    fig.update_layout(
+        xaxis_title=metric, 
+        yaxis_title='Density', 
+        plot_bgcolor='rgba(0, 0, 0, 0)', 
+        paper_bgcolor='rgba(0, 0, 0, 0)',
+        height=200,
+        margin=dict(l=20, r=20, t=20, b=20),
+        xaxis=dict(showgrid=False),  # Remove x-axis grid
+        yaxis=dict(showgrid=False),   # Remove y-axis grid
+        font=dict(color='#000000')  # Make all other text black
+    )
+
+    return dcc.Graph(id="figure", figure=fig)
+
+def arc_progression(arcs: list) -> dcc.Graph:
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x = list(range(len(arcs))),
+        y = arcs,
+        mode = 'lines+markers',
+        name = 'Arc Progression',
+        marker = dict(
+            color = 'black',
+            size = 10,
+            line = dict(
+                color = 'black',
+                width = 1
+            )
+        )
+    ))
+
+    fig.update_layout(
+        xaxis_title = 'Arc',
+        yaxis_title = 'Sentiment',
+        plot_bgcolor = 'rgba(0, 0, 0, 0)',
+        paper_bgcolor = 'rgba(0, 0, 0, 0)',
+        height = 400,
+        margin = dict(l = 20, r = 20, t = 20, b = 20),
+        xaxis = dict(showgrid = False),
+        yaxis = dict(showgrid = False),
+        font = dict(color = '#000000')
+    )
+
+    return dcc.Graph(id = "arc_progression", figure = fig)
+
+
 def value_boxes(column_name: str, value_name: str, df: pd.DataFrame, color: str) -> dbc.Col:
     return dbc.Col([
         dbc.Card([
@@ -67,6 +145,13 @@ def value_boxes_1(value_name: str, color: str, location: dict, extra_style: dict
         ], style = {"backgroundColor": color, 'borderColor': 'black'}|extra_style)
     ], width = location)
 
+def value_boxes_new(column_name: str, color: str) -> dbc.Col:
+    return dbc.Card([
+            dbc.CardBody([
+                html.Div(f"{column_name}", style=style_value_text),
+            ])
+        ], style = {"backgroundColor": color, 'borderColor': 'black'})
+
 def value_boxes_2(column_name: str, df: pd.DataFrame, color: str, location: dict, extra_style: dict = {}) -> dbc.Col:
     return dbc.Col([
         dbc.Card([
@@ -80,7 +165,7 @@ def value_boxes_3(column_name: str, df: pd.DataFrame, color: str, location: dict
     return dbc.Col([
         dbc.Card([
             dbc.CardBody([
-                html.Div(f"{df[df['Metric'] == column_name]['Mean_Bestsellers'].values[0].round(2)}", style=style_value_value)
+                html.Div(f"{df[df['Metric'] == column_name]['BESTSELLERS'].values[0].round(2)}", style=style_value_value)
             ])
         ], style = {"backgroundColor": color, 'borderColor': 'black', 'width': '60%', "margin": "0px 0px 0px 2.5vw"}|extra_style)
     ], width = location)
@@ -89,7 +174,7 @@ def value_boxes_4(column_name: str, df: pd.DataFrame, color: str, location: dict
     return dbc.Col([
         dbc.Card([
             dbc.CardBody([
-                html.Div(f"{df[df['Metric'] == column_name]['Mean_Canonicals'].values[0].round(2)}", style=style_value_value)
+                html.Div(f"{df[df['Metric'] == column_name]['CANON_ALL'].values[0].round(2)}", style=style_value_value)
             ])
         ], style = {"backgroundColor": color, 'borderColor': 'black', 'width': '60%', "margin": "0px 0px 0px 2.5vw"}|extra_style)
     ], width = location)
@@ -101,6 +186,18 @@ def value_boxes_1234(value_name: str, column_name: str, df: pd.DataFrame, color:
             value_boxes_3(value_name, df, palette_1[2],{'size': 2, 'offset': 1}),
             value_boxes_4(value_name, df, palette_1[2],{'size': 2, 'offset': 1}),
         ], style={"marginTop": 20, "marginBottom": 20})
+
+def value_boxes_fig(value_name: str, column_name: str, df: pd.DataFrame, color: str) -> dbc.Col:
+    return dbc.Row([
+            dbc.Col([value_boxes_new(column_name, palette_1[2])], width = {'size': 2, 'offset': 0}, align="center"),
+            dbc.Col([distribution_fig(value_name, df)], width = {'size': 9, 'offset': 1}),
+        ], style={"marginTop": 0, "marginBottom": 0})
+
+def value_boxes_arcs_fig(name: str, arcs: list[float]) -> dbc.Col:
+    return dbc.Row([
+            dbc.Col([value_boxes_new(name, palette_1[2])], width = {'size': 2, 'offset': 0}, align="center"),
+            dbc.Col([arc_progression(arcs)], width = {'size': 9, 'offset': 1}),
+        ], style={"marginTop": 0, "marginBottom": 0})
 
 def metrics_explanation(metric_group: str, explanation: str, id_but: str, id_col) -> dbc.Row:
     return dbc.Row([
@@ -118,52 +215,48 @@ def metrics_explanation(metric_group: str, explanation: str, id_but: str, id_col
 def styl_func(style_df: pd.DataFrame, stylometrics_explanation_text: str) -> html.Div:
     return html.Div([
         html.H2(children='Stylometrics', className="fw-bold text-white"),
-        dbc.Row([
-            value_boxes_1('Your Value', palette_1[2],{'size': 2, 'offset': 3}),
-            value_boxes_1('Canonical Mean', palette_1[2],{'size': 2, 'offset': 1}),
-            value_boxes_1('Bestseller Mean', palette_1[2],{'size': 2, 'offset': 1}),
-        ], style={"marginTop": 10, "marginBottom": 10}),
-        value_boxes_1234('word_count', 'Word Count', style_df, palette_1[2]),
-        value_boxes_1234('average_wordlen', 'Word Length', style_df, palette_1[2]),
-        value_boxes_1234('msttr', 'MSTTR', style_df, palette_1[2]),
-        value_boxes_1234('average_sentlen', 'Sentence Length', style_df, palette_1[2]),
-        value_boxes_1234('bzipr', 'bzipr', style_df, palette_1[2]),
-        value_boxes_1234('word_entropy', 'Word Entropy', style_df, palette_1[2]),
-        value_boxes_1234('bigram_entropy', 'Bigram Entropy', style_df, palette_1[2]),
-        metrics_explanation('Stylometrics', stylometrics_explanation_text, "collapse-button_1", "collapse_1"),
+        value_boxes_fig('word_count', 'Word Count', style_df, palette_1[2]),
+        value_boxes_fig('average_wordlen', 'Word Length', style_df, palette_1[2]),
+        value_boxes_fig('msttr', 'MSTTR', style_df, palette_1[2]),
+        value_boxes_fig('average_sentlen', 'Sentence Length', style_df, palette_1[2]),
+        value_boxes_fig('bzipr', 'bzipr', style_df, palette_1[2]),
+        value_boxes_fig('word_entropy', 'Word Entropy', style_df, palette_1[2]),
+        value_boxes_fig('bigram_entropy', 'Bigram Entropy', style_df, palette_1[2]),
+        metrics_explanation('Stylometrics', stylometrics_explanation_text, "collapse-button_1", "collapse_1")
     ], style = {"backgroundColor": personal_palette[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"})
 
-def sent_func(sent_df: pd.DataFrame, sentiment_explanation_text: str) -> html.Div:
-    return html.Div([
-        html.H2(children='Sentiment', className="fw-bold text-white"),
-        dbc.Row([
-            value_boxes_1('Your Value', palette_2[1],{'size': 2, 'offset': 3}),
-            value_boxes_1('Canonical Mean', palette_2[1],{'size': 2, 'offset': 1}),
-            value_boxes_1('Bestseller Mean', palette_2[1],{'size': 2, 'offset': 1}),
-        ], style={"marginTop": 10, "marginBottom": 10}),
-        value_boxes_1234('mean_sentiment', 'Mean Sentiment', sent_df, palette_2[1]),
-        value_boxes_1234('std_sentiment', 'Std Sentiment', sent_df, palette_2[1]),
-        value_boxes_1234('mean_sentiment_first_ten_percent', 'Mean Sentiment First 10%', sent_df, palette_2[1]),
-        value_boxes_1234('mean_sentiment_last_ten_percent', 'Mean Sentiment Last 10%', sent_df, palette_2[1]),
-        value_boxes_1234('difference_lastten_therest', 'Difference between last 10 and the rest', sent_df, palette_2[1]),
-        value_boxes_1234('hurst', 'Hurst', sent_df, palette_2[1]),
-        value_boxes_1234('approximate_entropy_value', 'Approximate Entropy', sent_df, palette_2[1]),
-        metrics_explanation('Sentiment', sentiment_explanation_text, "collapse-button_2", "collapse_2"),
-    ], style = {"backgroundColor": palette_2[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"})
+def sent_func(sent_df: pd.DataFrame, sentiment_explanation_text: str, arcs: list) -> html.Div:
+    column_mapping = {
+        'mean_sentiment': 'Mean Sentiment',
+        'std_sentiment': 'Std Sentiment',
+        'mean_sentiment_first_ten_percent': 'Mean Sentiment First 10%',
+        'mean_sentiment_last_ten_percent': 'Mean Sentiment Last 10%',
+        'difference_lastten_therest': 'Difference between last 10 and the rest',
+        'hurst': 'Hurst',
+        'approximate_entropy_value': 'Approximate Entropy'
+    }
+    
+    content = [html.H2(children='Sentiment', className="fw-bold text-white")]
+    
+    for value_name in sent_df['Metric']:
+        if value_name in column_mapping:
+            content.append(value_boxes_fig(value_name, column_mapping[value_name], sent_df, palette_2[1]))
+
+    if arcs is not None:
+        content.append(value_boxes_arcs_fig('Progression of Sentiment Arcs', arcs))
+    
+    content.append(metrics_explanation('Sentiment', sentiment_explanation_text, "collapse-button_2", "collapse_2"))
+    
+    return html.Div(content, style={"backgroundColor": palette_2[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"})
 
 def read_func(read_df: pd.DataFrame, readability_explanation_text: str) -> html.Div:
     return html.Div([
         html.H2(children='Readability', className="fw-bold text-white"),
-        dbc.Row([
-            value_boxes_1('Your Value', palette_4[1],{'size': 2, 'offset': 3}),
-            value_boxes_1('Canonical Mean', palette_4[1],{'size': 2, 'offset': 1}),
-            value_boxes_1('Bestseller Mean', palette_4[1],{'size': 2, 'offset': 1}),
-        ], style={"marginTop": 10, "marginBottom": 10}),
-        value_boxes_1234('flesch_grade', 'Flesch Grade', read_df, palette_4[1]),
-        value_boxes_1234('flesch_ease', 'Flesch Ease', read_df, palette_4[1]),
-        value_boxes_1234('smog', 'Smog', read_df, palette_4[1]),
-        value_boxes_1234('ari', 'Ari', read_df, palette_4[1]),
-        value_boxes_1234('dale_chall_new', 'Dale Chall New', read_df, palette_4[1]),
+        value_boxes_fig('flesch_grade', 'Flesch Grade', read_df, palette_4[1]),
+        value_boxes_fig('flesch_ease', 'Flesch Ease', read_df, palette_4[1]),
+        value_boxes_fig('smog', 'Smog', read_df, palette_4[1]),
+        value_boxes_fig('ari', 'Ari', read_df, palette_4[1]),
+        value_boxes_fig('dale_chall_new', 'Dale Chall New', read_df, palette_4[1]),
         metrics_explanation('Readability', readability_explanation_text, "collapse-button_4", "collapse_4"),
     ], style = {"backgroundColor": palette_4[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"})
 
@@ -180,77 +273,3 @@ def roget_func(roget_df: pd.DataFrame, roget_explanation_text: str) -> html.Div:
         value_boxes_1234('roget_n_cats', 'Roget n Categories', roget_df, palette_5[1]),
         metrics_explanation('Roget', roget_explanation_text, "collapse-button_5", "collapse_5"),
     ], style = {"backgroundColor": palette_5[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"})
-
-# def styl_func(style_df: pd.DataFrame, stylometrics_explanation_text: str) -> html.Div:
-#     return html.Div([
-#         html.H2(children='Stylometrics', className="fw-bold text-white"),
-#         dbc.Row([
-#             value_boxes('word_count', 'Word Count', style_df, palette_1[2]),
-#             value_boxes('average_wordlen', 'Word Length', style_df, palette_1[2]),
-#         ], style={"marginTop": 10, "marginBottom": 10}),
-#         dbc.Row([
-#             value_boxes('msttr', 'MSTTR', style_df, palette_1[2]),
-#             value_boxes('average_sentlen', 'Average Sentence Length', style_df, palette_1[2]),
-#         ], style={"marginTop": 10, "marginBottom": 10}),
-#         dbc.Row([
-#             value_boxes('bzipr', 'bzipr', style_df, palette_1[2]),
-#         ], style={"marginTop": 10, "marginBottom": 10}),
-#         metrics_explanation('Stylometrics', stylometrics_explanation_text, "collapse-button_1", "collapse_1"),
-#     ], style = {"backgroundColor": personal_palette[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"})
-
-# def sent_func(sent_df: pd.DataFrame, sentiment_explanation_text: str) -> html.Div:
-#     return html.Div([
-#         html.H2(children='Sentiment', className="fw-bold text-white"),
-#         dbc.Row([
-#             value_boxes('mean_sentiment', 'Mean Sentiment', sent_df, palette_2[1]),
-#             value_boxes('mean_sentiment_first_ten_percent', 'Mean Sentiment First 10%', sent_df, palette_2[1]),
-#         ], style={"marginTop": 10, "marginBottom": 10}),
-#         dbc.Row([
-#             value_boxes('mean_sentiment_last_ten_percent', 'Mean Sentiment Last 10%', sent_df, palette_2[1]),
-#             value_boxes('difference_lastten_therest', 'Difference between last 10 and the rest', sent_df, palette_2[1]),
-#         ], style={"marginTop": 10, "marginBottom": 10}),
-#         metrics_explanation('Sentiment', sentiment_explanation_text, "collapse-button_2", "collapse_2"),
-#     ], style = {"backgroundColor": palette_2[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"})
-
-# def entro_func(entropy_df: pd.DataFrame, entropy_explanation_text: str) -> html.Div:
-#     return html.Div([
-#         html.H2(children='Entropy', className="fw-bold text-white"),
-#         dbc.Row([
-#             value_boxes('word_entropy', 'Word Entropy', entropy_df, palette_3[1]),
-#             value_boxes('bigram_entropy', 'Bigram Entropy', entropy_df, palette_3[1]),
-#         ], style={"marginTop": 10, "marginBottom": 10}),
-#         dbc.Row([
-#             value_boxes('approximate_entropy_value', 'Approximate Entropy', entropy_df, palette_3[1]),
-#         ], style={"marginTop": 10, "marginBottom": 10}),
-#         metrics_explanation('Entropy', entropy_explanation_text, "collapse-button_3", "collapse_3"),
-#     ], style = {"backgroundColor": palette_3[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"})
-
-# def read_func(read_df: pd.DataFrame, readability_explanation_text: str) -> html.Div:
-#     return html.Div([
-#         html.H2(children='Readability', className="fw-bold text-white"),
-#         dbc.Row([
-#             value_boxes('flesch_grade', 'Flesch Grade', read_df, palette_4[1]),
-#             value_boxes('flesch_ease', 'Flesch Ease', read_df, palette_4[1]),
-#         ], style={"marginTop": 10, "marginBottom": 10}),
-#         dbc.Row([
-#             value_boxes('smog', 'Smog', read_df, palette_4[1]),
-#             value_boxes('ari', 'Ari', read_df, palette_4[1]),
-#         ], style={"marginTop": 10, "marginBottom": 10}),
-#         dbc.Row([
-#             value_boxes('dale_chall_new', 'Dale Chall New', read_df, palette_4[1]),
-#         ], style={"marginTop": 10, "marginBottom": 10}),
-#         metrics_explanation('Readability', readability_explanation_text, "collapse-button_4", "collapse_4"),
-#     ], style = {"backgroundColor": palette_4[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"})
-
-# def roget_func(roget_df: pd.DataFrame, roget_explanation_text: str) -> html.Div:
-#     return html.Div([
-#         html.H2(children='Roget', className="fw-bold text-white"),
-#         dbc.Row([
-#             value_boxes('roget_n_tokens', 'Roget n Tokens', roget_df, palette_5[1]),
-#             value_boxes('roget_n_tokens_filtered', 'Roget Filtered', roget_df, palette_5[1]),
-#         ], style={"marginTop": 10, "marginBottom": 10}),
-#         dbc.Row([
-#             value_boxes('roget_n_cats', 'Roget n Categories', roget_df, palette_5[1]),
-#         ], style={"marginTop": 10, "marginBottom": 10}),
-#         metrics_explanation('Roget', roget_explanation_text, "collapse-button_5", "collapse_5"),
-#     ], style = {"backgroundColor": palette_5[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"})

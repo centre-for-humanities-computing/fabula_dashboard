@@ -49,6 +49,25 @@ SIDEBAR_STYLE = {
     "background-color": "#f8f9fa",
 }
 
+value_names = ['BESTSELLERS','CANON_ALL', 'PULITZER', 'NBA', 'HUGO', 'GOODREADS_CLASSICS', 'OPENSYLLABUS', 'NORTON_ENGLISH', 
+                'NORTON_AMERICAN', 'GOODREADS_BEST_20TH_CENTURY', 'NOBEL', 'NEBULA', 'LOCUS_HORROR', 'LOCUS_FANTASY', 'LOCUS_SCIFI',
+                'BRAM_STOKER_AWARD', 'BFA', 'EDGAR_AWARDS', 'ROMANTIC_AWARDS', 'WORLD_FANTASY_AWARD', 'MYTHOPOEIC_AWARDS',
+                'PHILIP_K_DICK_AWARD','J_W_CAMPBELL_AWARD','PROMETHEUS_AWARD', 'PENGUIN_CLASSICS_SERIES_TITLEBASED', 'PENGUIN_CLASSICS_SERIES_AUTHORBASED',
+                'SCIFI_AWARDS', 'FANTASY_AWARDS', 'HORROR_AWARDS', 'PUBLISHERS_WEEKLY_BESTSELLERS', 'NYT_BESTSELLERS', 'PRIZES',
+                'NORTON', 'CANON', 'PENGUIN_CL', 'NONCANON']
+
+label_names = ['BESTSELLERS','CANON_ALL', 'PULITZER', 'NBA', 'HUGO', 'GOODREADS_CLASSICS', 'OPENSYLLABUS', 'NORTON_ENGLISH', 
+                'NORTON_AMERICAN', 'GOODREADS_BEST_20TH_CENTURY', 'NOBEL', 'NEBULA', 'LOCUS_HORROR', 'LOCUS_FANTASY', 'LOCUS_SCIFI',
+                'BRAM_STOKER_AWARD', 'BFA', 'EDGAR_AWARDS', 'ROMANTIC_AWARDS', 'WORLD_FANTASY_AWARD', 'MYTHOPOEIC_AWARDS',
+                'PHILIP_K_DICK_AWARD','J_W_CAMPBELL_AWARD','PROMETHEUS_AWARD', 'PENGUIN_CLASSICS_SERIES_TITLEBASED', 'PENGUIN_CLASSICS_SERIES_AUTHORBASED',
+                'SCIFI_AWARDS', 'FANTASY_AWARDS', 'HORROR_AWARDS', 'PUBLISHERS_WEEKLY_BESTSELLERS', 'NYT_BESTSELLERS', 'PRIZES',
+                'NORTON', 'CANON', 'PENGUIN_CL', 'NONCANON']
+
+# Creating the group selection options as a list of dictionaries
+group_options = []
+for value, label in zip(value_names, label_names):
+    group_options.append({"value": value, "label": label})
+
 sidebar = html.Div([
     html.Br(),
     html.H1("Settings", className="text-center fw-bold fs-2"),
@@ -59,8 +78,8 @@ sidebar = html.Div([
     html.H3(children='Choose Sentiment Analysis', style={'margin-top': '50px'}, className="fw-bold"),
     dcc.Dropdown(id='sent-dropdown', placeholder="Select sentiment analysis method", searchable = False, style = {'color': 'black'}),
     html.Br(),
-    html.H3(children='Choose Group (not working)', style={'margin-top': '50px'}, className="fw-bold"),
-    dcc.Dropdown(options=[{'value': 'canonical', 'label': 'Canonical'}, {'value': 'bestseller', 'label': 'Bestseller'}], id='group-dropdown', placeholder="Select a Group", searchable = False, style = {'color': 'black'}, multi = True),
+    html.H3(children='Choose Comparison Group', style={'margin-top': '50px'}, className="fw-bold"),
+    dcc.Dropdown(options=group_options, id='group-dropdown', placeholder="Select a Group", searchable = False, style = {'color': 'black'}, multi = True),
     html.Br(),
     html.H3(children='Upload File', style={'margin-top': '50px'}, className="fw-bold"),
     dcc.Upload(id='upload-data', children=html.Div(['Drag and Drop or ', html.A('Select Files (.txt or .docx)')]), style={'width': '100%',
@@ -90,7 +109,7 @@ sidebar = html.Div([
 main_content = html.Div(
     children = [
         dbc.Row([html.Hr(style = {'margin': '10px'}), dbc.Nav([dbc.NavLink("Home", href="/", active="exact"),], vertical=False, pills=True,), html.Hr(style = {'margin': '10px'}),], id = 'output-data-upload'),
-        dcc.Loading(id = 'loading-1', type = 'cube', children = [dcc.Store(id='intermediate-value'), dcc.Store(id='intermediate-value-2', data = 'string'), dcc.Store(id='file_or_text', data = 'string'),], fullscreen = False, style = {'position': 'fixed', 'top': '50%', 'left': '62.5%', 'transform': 'translate(-50%, -50%)'}, color = 'green'),
+        dcc.Loading(id = 'loading-1', type = 'cube', children = [dcc.Store(id='intermediate-value'), dcc.Store(id='intermediate-value-2', data = 'string'), dcc.Store(id='file_or_text', data = 'string'), dcc.Store(id='intermediate-value-3'),], fullscreen = False, style = {'position': 'fixed', 'top': '50%', 'left': '62.5%', 'transform': 'translate(-50%, -50%)'}, color = 'green'),
     ],
 )
 
@@ -217,15 +236,17 @@ def file_or_text(filename, text):
 @callback(Output('output-data-upload', 'children'),
             Output('intermediate-value', 'data'),
             Output('intermediate-value-2', 'data'),
+            Output('intermediate-value-3', 'data'),
             State('upload-data', 'contents'),
             State('upload-data', 'filename'),
             State('lang-dropdown', 'value'),
             State('sent-dropdown', 'value'),
+            State('group-dropdown', 'value'),
             State('textarea-example', 'value'),
             State('file_or_text', 'data'),
             Input('submit-val', 'n_clicks'),
             prevent_initial_call=True)
-def update_output(list_of_contents, list_of_names, language, sentiment, text, fileortext, n_clicks):
+def update_output(list_of_contents, list_of_names, language, sentiment, proxy, text, fileortext, n_clicks):
     if language is None:
         raise PreventUpdate
 
@@ -234,9 +255,9 @@ def update_output(list_of_contents, list_of_names, language, sentiment, text, fi
     
     if n_clicks > 0:
         if list_of_contents is not None or text is not None:
-            children, data, text_string = parse_contents(list_of_contents, list_of_names, language, sentiment, text, fileortext)
+            children, data, text_string, arcs = parse_contents(list_of_contents, list_of_names, language, sentiment, text, fileortext, proxy)
 
-            return children, data, text_string
+            return children, data, text_string, arcs
 
 
 @callback(Output("page-content", "children"),
@@ -247,8 +268,9 @@ def update_output(list_of_contents, list_of_names, language, sentiment, text, fi
           State('file_or_text', 'data'),
           State('lang-dropdown', 'value'),
           State('sent-dropdown', 'value'),
-          Input("intermediate-value-2", "data"),)
-def render_page_content(pathname, data, n_clicks, contents, text, language, sentiment, full_string):
+          Input("intermediate-value-2", "data"),
+          Input("intermediate-value-3", "data"),)
+def render_page_content(pathname, data, n_clicks, contents, text, language, sentiment, full_string, arcs):
     if n_clicks > 0:
         if language is None:
             raise PreventUpdate
@@ -275,10 +297,9 @@ def render_page_content(pathname, data, n_clicks, contents, text, language, sent
                         dbc.Row([html.P(children=['First 500 characters:'], className="fw-bold fs-10"),html.P(children=[full_string[:500], '...']), html.Hr()]),
                         styl_func(style_df=style_df, stylometrics_explanation_text=stylometrics_explanation_text)])
                 elif pathname == "/sent":
-                    print(sent_df)
                     return html.Div([
                         dbc.Row([html.P(children=['First 500 characters:'], className="fw-bold fs-10"),html.P(children=[full_string[:500], '...']), html.Hr()]),
-                        sent_func(sent_df=sent_df, sentiment_explanation_text=sentiment_explanation_text)])
+                        sent_func(sent_df=sent_df, sentiment_explanation_text=sentiment_explanation_text, arcs=arcs)])
                 elif pathname == "/read":
                     return html.Div([
                         dbc.Row([html.P(children=['First 500 characters:'], className="fw-bold fs-10"),html.P(children=[full_string[:500], '...']), html.Hr()]),
@@ -325,5 +346,5 @@ def render_page_content(pathname, data, n_clicks, contents, text, language, sent
             html.P(dcc.Markdown(home_page_text), style = {'fontSize': 20, 'textAlign': 'left', 'margin': '10px'}),])
 
 if __name__ == '__main__':
-    # app.run(debug=True)
     app.run(debug=False)
+    # app.run(debug=False)

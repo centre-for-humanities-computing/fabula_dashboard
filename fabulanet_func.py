@@ -10,7 +10,7 @@ from statistics import stdev
 from metrics_function import *
 from dash_utils import *
 
-def parse_contents(contents, filename, language, sentiment, text, fileortext):
+def parse_contents(contents, filename, language, sentiment, text, fileortext, proxy):
 
     if language is None:
         print(Exception)
@@ -54,7 +54,7 @@ def parse_contents(contents, filename, language, sentiment, text, fileortext):
         else:
             return 'Unsupported file type'
     
-    print(full_string)
+    #print(full_string)
 
     if fileortext == 'text':
         full_string = text
@@ -101,8 +101,7 @@ def parse_contents(contents, filename, language, sentiment, text, fileortext):
             df[col] = df[col].astype(float)
 
     # read in mean file
-    mean_df = pd.read_csv(os.path.join('data', 'mean.csv'))
-
+    mean_df = pd.read_csv(os.path.join('data', 'mean.csv'), index_col=0)
 
     # column_names_row = pd.DataFrame([df.columns], columns=df.columns)
     # column_names_row = column_names_row.T
@@ -166,9 +165,15 @@ def parse_contents(contents, filename, language, sentiment, text, fileortext):
     column_all_row = pd.DataFrame([columns_all_2], columns=columns_all_2)
     column_all_row = column_all_row.T
     mean_df_columns_all = mean_df[columns_all].T
+    mean_df_columns_all = mean_df_columns_all[proxy]
     df = df.T
-    concat_df = pd.concat([column_all_row, df, mean_df_columns_all], ignore_index=True, axis = 1)
-    concat_df.columns = ['Metric', 'Value', 'Mean_Bestsellers', 'Mean_Canonicals']
+    df.columns = ['Value']
+    concat_df = pd.concat([column_all_row, df, mean_df_columns_all], axis = 1)
+    old_column_name_0 = concat_df.columns[0]  # Get the old column name using its position
+    concat_df = concat_df.rename(columns={old_column_name_0: 'Metric'})
+
+    # remove rows that have NaN in the Value column
+    concat_df = concat_df.dropna(subset=['Value'])
 
     if language == 'english':
          navbar = html.Div([
@@ -198,5 +203,8 @@ def parse_contents(contents, filename, language, sentiment, text, fileortext):
                     html.Hr(style = {'margin': '10px'}),  # horizontal line
                     ]),
                 ])
-
-    return navbar, concat_df.to_dict(), full_string
+    
+    if "mean_sentiment_per_segment" in dict_0:
+        return navbar, concat_df.to_dict(), full_string, dict_0['mean_sentiment_per_segment']
+    else:
+        return navbar, concat_df.to_dict(), full_string, None
