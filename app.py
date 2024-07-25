@@ -156,7 +156,11 @@ def set_dropdown_required_sent(value, n_clicks):
 )
 def update_options(value):
     if value=='english':
-        return [{'label':'Afinn', 'value': 'afinn', 'title': 'A dictionary approach to sentiment analysis developed by Afinn'}, {'label':'Vader', 'value': 'vader'}, {'label':'Syuzhet', 'value': 'syuzhet'}, {'label':'Avg Syuzhet Vader', 'value': 'avg_syuzhet_vader'}]
+        return [{'label':'Afinn', 'value': 'afinn', 'title': 'A dictionary approach to sentiment analysis developed by Afinn'}, 
+                {'label':'Vader', 'value': 'vader'}, 
+                #{'label':'Syuzhet', 'value': 'syuzhet'}, 
+                #{'label':'Avg Syuzhet Vader', 'value': 'avg_syuzhet_vader'}
+                ]
     if value=='danish':
         return [{'label':'Afinn', 'value': 'afinn'}]
     else:
@@ -264,7 +268,14 @@ def update_output(list_of_contents, list_of_names, language, sentiment, proxy, t
             read_df = concat_df[concat_df['Metric'].isin(['flesch_grade', 'flesch_ease', 'smog', 'ari', 'dale_chall_new'])]
 
             styl_func_output = styl_func(style_df=style_df, stylometrics_explanation_text=stylometrics_explanation_text)
-            sent_func_output = sent_func(sent_df=sent_df, sentiment_explanation_text=sentiment_explanation_text, arcs=arcs)
+            if sentiment == 'afinn':
+                sent_func_output = sent_func(sent_df=sent_df, sentiment_explanation_text=sentiment_explanation_text, arcs=arcs)
+            elif sentiment == 'vader':
+                sent_func_output = sent_func(sent_df=sent_df, sentiment_explanation_text=sentiment_explanation_text, arcs=arcs)
+            elif sentiment == 'syuzhet':
+                sent_func_output = sent_func(sent_df=sent_df, sentiment_explanation_text=sentiment_explanation_text, arcs=arcs)
+            elif sentiment == 'avg_syuzhet_vader':
+                sent_func_output = sent_func(sent_df=sent_df, sentiment_explanation_text=sentiment_explanation_text, arcs=arcs)
             read_func_output = read_func(read_df=read_df, readability_explanation_text=readability_explanation_text)
 
             return children, data, text_string, arcs, [styl_func_output, sent_func_output, read_func_output]
@@ -357,5 +368,5 @@ def render_page_content(pathname, data, n_clicks, contents, text, language, sent
             html.P(dcc.Markdown(home_page_text), style = {'fontSize': 20, 'textAlign': 'left', 'margin': '10px'}),])
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(debug=True)
     # app.run(debug=False)
