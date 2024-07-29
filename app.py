@@ -34,6 +34,8 @@ with open(os.path.join('assets', 'texts', 'readability_explanations.txt'), 'r') 
 #             roget_explanation_text = file.read()
 with open(os.path.join('assets', 'texts', 'home_page.txt'), 'r') as file:
             home_page_text = file.read()
+with open(os.path.join('assets', 'texts', 'about_section.txt'), 'r') as file:
+            about_section_text = file.read()
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP],suppress_callback_exceptions=True)
 server = app.server
@@ -79,7 +81,7 @@ sidebar = html.Div([
     dcc.Dropdown(id='sent-dropdown', placeholder="Select sentiment analysis method", searchable = False, style = {'color': 'black'}),
     html.Br(),
     html.H3(children='Choose Comparison Group', style={'margin-top': '50px'}, className="fw-bold"),
-    dcc.Dropdown(options=group_options, id='group-dropdown', placeholder="Select a Group", searchable = False, style = {'color': 'black'}, multi = True),
+    dcc.Dropdown(id='group-dropdown', placeholder="Select a Group", searchable = False, style = {'color': 'black'}, multi = True),
     html.Br(),
     html.H3(children='Upload File', style={'margin-top': '50px'}, className="fw-bold"),
     dcc.Upload(id='upload-data', children=html.Div(['Drag and Drop or ', html.A('Select Files (.txt or .docx)')]), style={'width': '100%',
@@ -108,7 +110,7 @@ sidebar = html.Div([
 
 main_content = html.Div(
     children = [
-        dbc.Row([html.Hr(style = {'margin': '10px'}), dbc.Nav([dbc.NavLink("Home", href="/", active="exact"),], vertical=False, pills=True,), html.Hr(style = {'margin': '10px'}),], id = 'output-data-upload'),
+        dbc.Row([html.Hr(style = {'margin': '10px'}), dbc.Nav([dbc.NavLink("Home", href="/", active="exact"),dbc.NavLink("More Info", href="/about", active="exact")], vertical=False, pills=True,), html.Hr(style = {'margin': '10px'}),], id = 'output-data-upload'),
         dcc.Loading(id = 'loading-1', type = 'cube', children = [dcc.Store(id='intermediate-value'), dcc.Store(id='intermediate-value-2', data = 'string'), dcc.Store(id='file_or_text', data = 'string'), dcc.Store(id='intermediate-value-3'), dcc.Store(id='intermediate-value-4'),], fullscreen = False, style = {'position': 'fixed', 'top': '50%', 'left': '62.5%', 'transform': 'translate(-50%, -50%)'}, color = 'green'),
     ],
 )
@@ -158,11 +160,23 @@ def update_options(value):
     if value=='english':
         return [{'label':'Afinn', 'value': 'afinn', 'title': 'A dictionary approach to sentiment analysis developed by Afinn'}, 
                 {'label':'Vader', 'value': 'vader'}, 
-                #{'label':'Syuzhet', 'value': 'syuzhet'}, 
-                #{'label':'Avg Syuzhet Vader', 'value': 'avg_syuzhet_vader'}
+                {'label':'Syuzhet', 'value': 'syuzhet'}, 
+                {'label':'Avg Syuzhet Vader', 'value': 'avg_syuzhet_vader'}
                 ]
     if value=='danish':
         return [{'label':'Afinn', 'value': 'afinn'}]
+    else:
+        raise PreventUpdate
+    
+@callback(
+    Output('group-dropdown', "options"),
+    Input('lang-dropdown', "value")
+)
+def update_options(value):
+    if value=='english':
+        return group_options
+    if value=='danish':
+        return []
     else:
         raise PreventUpdate
 
@@ -264,21 +278,23 @@ def update_output(list_of_contents, list_of_names, language, sentiment, proxy, t
             
             concat_df = pd.DataFrame.from_dict(data)
             style_df = concat_df[concat_df['Metric'].isin(['word_count', 'average_wordlen', 'msttr', 'average_sentlen', 'bzipr', 'word_entropy', 'bigram_entropy'])]
-            sent_df = concat_df[concat_df['Metric'].isin(['mean_sentiment', 'std_sentiment', 'mean_sentiment_first_ten_percent', 'mean_sentiment_last_ten_percent', 'difference_lastten_therest', 'arc_mean', 'arc_sd', 'mean_sentiment_per_segment_mean', 'mean_sentiment_per_segment_sd', 'hurst', 'approximate_entropy_value'])]
-            read_df = concat_df[concat_df['Metric'].isin(['flesch_grade', 'flesch_ease', 'smog', 'ari', 'dale_chall_new'])]
+            if sentiment == 'syuzhet':
+                sent_column_list = ['mean_sentiment', 'std_sentiment', 'mean_sentiment_first_ten_percent', 'mean_sentiment_last_ten_percent', 'difference_lastten_therest', 'arc_mean', 'arc_sd', 'mean_sentiment_per_segment_mean', 'mean_sentiment_per_segment_sd', 'HURST_SYUZHET', 'approximate_entropy_value']
+            else:
+                sent_column_list = ['mean_sentiment', 'std_sentiment', 'mean_sentiment_first_ten_percent', 'mean_sentiment_last_ten_percent', 'difference_lastten_therest', 'arc_mean', 'arc_sd', 'mean_sentiment_per_segment_mean', 'mean_sentiment_per_segment_sd', 'hurst', 'approximate_entropy_value']
+            sent_df = concat_df[concat_df['Metric'].isin(sent_column_list)]
 
-            styl_func_output = styl_func(style_df=style_df, stylometrics_explanation_text=stylometrics_explanation_text)
-            if sentiment == 'afinn':
-                sent_func_output = sent_func(sent_df=sent_df, sentiment_explanation_text=sentiment_explanation_text, arcs=arcs)
-            elif sentiment == 'vader':
-                sent_func_output = sent_func(sent_df=sent_df, sentiment_explanation_text=sentiment_explanation_text, arcs=arcs)
-            elif sentiment == 'syuzhet':
-                sent_func_output = sent_func(sent_df=sent_df, sentiment_explanation_text=sentiment_explanation_text, arcs=arcs)
-            elif sentiment == 'avg_syuzhet_vader':
-                sent_func_output = sent_func(sent_df=sent_df, sentiment_explanation_text=sentiment_explanation_text, arcs=arcs)
-            read_func_output = read_func(read_df=read_df, readability_explanation_text=readability_explanation_text)
+            styl_func_output = styl_func(style_df=style_df, stylometrics_explanation_text=stylometrics_explanation_text, language=language)
+            sent_func_output = sent_func(sent_df=sent_df, sentiment_explanation_text=sentiment_explanation_text, arcs=arcs, sentiment_method = sentiment, language=language)
 
-            return children, data, text_string, arcs, [styl_func_output, sent_func_output, read_func_output]
+            if language == 'english':
+                read_df = concat_df[concat_df['Metric'].isin(['flesch_grade', 'flesch_ease', 'smog', 'ari', 'dale_chall_new'])]
+                read_func_output = read_func(read_df=read_df, readability_explanation_text=readability_explanation_text)
+                
+                return children, data, text_string, arcs, [styl_func_output, sent_func_output, read_func_output]
+
+            if language == 'danish':
+                return children, data, text_string, arcs, [styl_func_output, sent_func_output]
 
 
 @callback(Output("page-content", "children"),
@@ -302,7 +318,7 @@ def render_page_content(pathname, data, n_clicks, contents, text, language, sent
         
         if contents is not None or text is not None:
             if language == 'english':
-                concat_df = pd.DataFrame.from_dict(data)
+                #concat_df = pd.DataFrame.from_dict(data)
 
                 # use only specified rows from concat_df
                 # style_df = concat_df[concat_df['Metric'].isin(['word_count', 'average_wordlen', 'msttr', 'average_sentlen', 'bzipr', 'word_entropy', 'bigram_entropy'])]
@@ -312,8 +328,8 @@ def render_page_content(pathname, data, n_clicks, contents, text, language, sent
 
                 if pathname == "/":
                     return html.Div([
-                        html.P("Welcome to Fabula-NET", style = {'fontSize': 50, 'textAlign': 'center', 'margin': '10px'}),
-                        html.P(dcc.Markdown(home_page_text), style = {'fontSize': 20, 'textAlign': 'left', 'margin': '10px'}),])
+                        html.P("Welcome to Fabula-NET", style = {'fontSize': 50, 'textAlign': 'center', 'margin': '10px 0px 10px 0px'}),
+                        html.P(dcc.Markdown(home_page_text), style = {'fontSize': 20, 'textAlign': 'left', 'margin': '10px 200px 10px 200px'}),])
                 elif pathname == "/styl":
                     return html.Div([
                         dbc.Row([html.P(children=['First 500 characters:'], className="fw-bold fs-10"),html.P(children=[full_string[:500], '...']), html.Hr()]),
@@ -331,28 +347,33 @@ def render_page_content(pathname, data, n_clicks, contents, text, language, sent
                 #         dbc.Row([html.P(children=['First 500 characters:'], className="fw-bold fs-10"),html.P(children=[full_string[:500], '...']), html.Hr()]),
                 #         roget_func(roget_df=roget_df, roget_explanation_text=roget_explanation_text)])
                 elif pathname == "/about":
-                     return html.Div(["Add further information about metrics and stuff here"])
+                     return html.Div([
+                        html.P("More Info", style = {'fontSize': 50, 'textAlign': 'center', 'margin': '10px 0px 10px 0px'}),
+                        html.P(dcc.Markdown(about_section_text), style = {'fontSize': 20, 'textAlign': 'left', 'margin': '10px 200px 10px 200px'}),])
+
             if language == 'danish':
-                concat_df = pd.DataFrame.from_dict(data)
+                #concat_df = pd.DataFrame.from_dict(data)
 
                 # use only specified rows from concat_df
-                style_df = concat_df[concat_df['Metric'].isin(['word_count', 'average_wordlen', 'msttr', 'average_sentlen', 'bzipr', 'word_entropy', 'bigram_entropy'])]
-                sent_df = concat_df[concat_df['Metric'].isin(['mean_sentiment', 'std_sentiment', 'mean_sentiment_first_ten_percent', 'mean_sentiment_last_ten_percent', 'difference_lastten_therest', 'arc_mean', 'arc_sd', 'mean_sentiment_per_segment_mean', 'mean_sentiment_per_segment_sd', 'hurst', 'approximate_entropy_value'])]
+                # style_df = concat_df[concat_df['Metric'].isin(['word_count', 'average_wordlen', 'msttr', 'average_sentlen', 'bzipr', 'word_entropy', 'bigram_entropy'])]
+                # sent_df = concat_df[concat_df['Metric'].isin(['mean_sentiment', 'std_sentiment', 'mean_sentiment_first_ten_percent', 'mean_sentiment_last_ten_percent', 'difference_lastten_therest', 'arc_mean', 'arc_sd', 'mean_sentiment_per_segment_mean', 'mean_sentiment_per_segment_sd', 'hurst', 'approximate_entropy_value'])]
 
                 if pathname == "/":
                     return html.Div([
-                        html.P("Welcome to Fabula-NET", style = {'fontSize': 50, 'textAlign': 'center', 'margin': '10px'}),
-                        html.P(dcc.Markdown(home_page_text), style = {'fontSize': 20, 'textAlign': 'left', 'margin': '10px'}),])
+                        html.P("Welcome to Fabula-NET", style = {'fontSize': 50, 'textAlign': 'center', 'margin': '10px 0px 10px 0px'}),
+                        html.P(dcc.Markdown(home_page_text), style = {'fontSize': 20, 'textAlign': 'left', 'margin': '10px 200px 10px 200px'}),])
                 elif pathname == "/styl":
                     return html.Div([
                         dbc.Row([html.P(children=['First 500 characters:'], className="fw-bold fs-10"),html.P(children=[full_string[:500], '...']), html.Hr()]),
-                        styl_func(style_df=style_df, stylometrics_explanation_text=stylometrics_explanation_text)])
+                        func_outputs[0]])
                 elif pathname == "/sent":
                     return html.Div([
                         dbc.Row([html.P(children=['First 500 characters:'], className="fw-bold fs-10"),html.P(children=[full_string[:500], '...']), html.Hr()]),
-                        sent_func(sent_df=sent_df, sentiment_explanation_text=sentiment_explanation_text)])
+                        func_outputs[1]])
                 elif pathname == "/about":
-                     return html.Div(["Add further information about metrics and stuff here"])
+                     return html.Div([
+                        html.P("More Info", style = {'fontSize': 50, 'textAlign': 'center', 'margin': '10px 0px 10px 0px'}),
+                        html.P(dcc.Markdown(about_section_text), style = {'fontSize': 20, 'textAlign': 'left', 'margin': '10px 200px 10px 200px'}),])
         # If the user tries to reach a different page, return a 404 message
         return html.Div(
             [
@@ -364,8 +385,12 @@ def render_page_content(pathname, data, n_clicks, contents, text, language, sent
         )
     elif pathname == "/":
         return html.Div([
-            html.P("Welcome to Fabula-NET", style = {'fontSize': 50, 'textAlign': 'center', 'margin': '10px'}),
-            html.P(dcc.Markdown(home_page_text), style = {'fontSize': 20, 'textAlign': 'left', 'margin': '10px'}),])
+            html.P("Welcome to Fabula-NET", style = {'fontSize': 50, 'textAlign': 'center', 'margin': '10px 0px 10px 0px'}),
+            html.P(dcc.Markdown(home_page_text), style = {'fontSize': 20, 'textAlign': 'left', 'margin': '10px 200px 10px 200px'}),])
+    elif pathname == "/about":
+        return html.Div([
+            html.P("More Info", style = {'fontSize': 50, 'textAlign': 'center', 'margin': '10px 0px 10px 0px'}),
+            html.P(dcc.Markdown(about_section_text), style = {'fontSize': 20, 'textAlign': 'left', 'margin': '10px 200px 10px 200px'}),])
 
 if __name__ == '__main__':
     app.run(debug=True)

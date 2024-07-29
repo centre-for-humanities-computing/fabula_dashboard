@@ -18,7 +18,7 @@ def compute_metrics(text:str, lang:str, sentiment_method:str) -> dict:
     lmtzr = WordNetLemmatizer()
 
     # load spacy model according to language
-    print(f"loading spacy model for {lang}")
+    #print(f"loading spacy model for {lang}")
     nlp = get_nlp(lang)
     nlp.max_length = 3500000
 
@@ -26,12 +26,12 @@ def compute_metrics(text:str, lang:str, sentiment_method:str) -> dict:
     output = {}
 
     # prepare text and tokens
-    print("preparing text and tokens")
+    #print("preparing text and tokens")
     sents = sent_tokenize(text, language=lang)
     words = word_tokenize(text, language=lang)
 
     # spacy
-    print("processing spacy")
+    #print("processing spacy")
     spacy_attributes = []
     for token in nlp(text):
         token_attributes = get_spacy_attributes(token)
@@ -40,15 +40,15 @@ def compute_metrics(text:str, lang:str, sentiment_method:str) -> dict:
     spacy_df = create_spacy_df(spacy_attributes)
 
     # stylometrics
-    print("processing stylometrics")
+    #print("processing stylometrics")
     ## for words
-    print("processing words")
+    #print("processing words")
     output["word_count"] = len(words)
     output["average_wordlen"] = avg_wordlen(words)
     output["msttr"] = ld.msttr(words, window_length=100)
 
     # for sentences
-    print("processing sentences")
+    #print("processing sentences")
     # if len(sents) < 1502:
     if len(sents) < 1:
         print("text not long enough for stylometrics\n")
@@ -58,21 +58,21 @@ def compute_metrics(text:str, lang:str, sentiment_method:str) -> dict:
         output["gzipr"], output["bzipr"] = compressrat(sents)
 
     # bigram and word entropy
-    print("processing bigram and word entropy")
+    #print("processing bigram and word entropy")
     try:
         output["bigram_entropy"], output["word_entropy"] = text_entropy(text, language=lang, base=2, asprob=False)
     except:
         print("error in bigram and/or word entropy\n")
 
     # setting up sentiment analyzer
-    print("setting up sentiment analyzer")
+    #print("setting up sentiment analyzer")
     if "vader" in sentiment_method:
         nltk.download("vader_lexicon")
     
     arc = get_sentarc(sents, sentiment_method, lang)
 
     # basic sentiment features
-    print("processing basic sentiment features")
+    #print("processing basic sentiment features")
     # if len(arc) < 60:
     # if len(arc) < 0:
     #     print("arc not long enough for basic sentiment features\n")
@@ -99,7 +99,7 @@ def compute_metrics(text:str, lang:str, sentiment_method:str) -> dict:
         ) = get_basic_sentarc_features(arc, len(sents))
 
     # approximate entropy
-    print("processing approximate entropy")
+    #print("processing approximate entropy")
     try:
         output["approximate_entropy"] = nk.entropy_approximate(
             arc, dimension=2, tolerance="sd"
@@ -108,16 +108,19 @@ def compute_metrics(text:str, lang:str, sentiment_method:str) -> dict:
         print("error with approximate entropy\n")
     
     # hurst
-    print("processing hurst")
+    #print("processing hurst")
     try:
         output["hurst"] = get_hurst(arc)
+        if sentiment_method == "syuzhet":
+            # change the name of the hurst feature
+            output["HURST_SYUZHET"] = output["hurst"]
     except:
         print("error with hurst\n")
 
     # doing the things that only work in English
     if lang == "english":
         # readability
-        print("processing readability")
+        #print("processing readability")
         try:
             (
                 output["flesch_grade"],
@@ -133,50 +136,50 @@ def compute_metrics(text:str, lang:str, sentiment_method:str) -> dict:
         # concreteness and VAD
         # diconc = json.load("data/concreteness_dict.json")
 
-        with open("data/concreteness_dict.json") as f:
-            diconc = json.load(f)
+        # with open("data/concreteness_dict.json") as f:
+        #     diconc = json.load(f)
 
-        with open("data/NRC-VAD-Lexicon.txt", "r") as f: # not in fabula_pipeline repo?
-            lexicon = f.readlines()
+        # with open("data/NRC-VAD-Lexicon.txt", "r") as f: # not in fabula_pipeline repo?
+        #     lexicon = f.readlines()
 
-        dico = make_dico(lexicon)
+        # dico = make_dico(lexicon)
 
-        conc = []
-        val, aro, dom = [], [], []
+        # conc = []
+        # val, aro, dom = [], [], []
 
-        for sent in sents:
-            words = word_tokenize(sent)
-            lemmas = [lmtzr.lemmatize(word) for word in words]
+        # for sent in sents:
+        #     words = word_tokenize(sent)
+        #     lemmas = [lmtzr.lemmatize(word) for word in words]
 
-            for lem in lemmas:
-                if lem in diconc.keys():
-                    conc.append([diconc[lem]])
-                if lem in dico.keys():
-                    val.append([dico[lem][0]])
-                    aro.append([dico[lem][1]])
-                    dom.append([dico[lem][2]])
+        #     for lem in lemmas:
+        #         if lem in diconc.keys():
+        #             conc.append([diconc[lem]])
+        #         if lem in dico.keys():
+        #             val.append([dico[lem][0]])
+        #             aro.append([dico[lem][1]])
+        #             dom.append([dico[lem][2]])
 
-        output["concreteness"] = conc
-        output["valence"] = val
-        output["arousal"] = aro
-        output["dominance"] = dom
+        # output["concreteness"] = conc
+        # output["valence"] = val
+        # output["arousal"] = aro
+        # output["dominance"] = dom
 
-        # roget
-        print("processing roget")
-        all_roget_categories = roget.list_all_categories()
+        # # roget
+        # #print("processing roget")
+        # all_roget_categories = roget.list_all_categories()
 
-        roget_df = filter_spacy_df(spacy_df)
+        # roget_df = filter_spacy_df(spacy_df)
 
-        output["roget_n_tokens"] = len(spacy_df)
-        output["roget_n_tokens_filtered"] = len(roget_df)
+        # output["roget_n_tokens"] = len(spacy_df)
+        # output["roget_n_tokens_filtered"] = len(roget_df)
 
-        token_categories = get_token_categories(roget_df)
-        doc_categories = re.findall(r"(rog\d{3} \w*)", token_categories)
+        # token_categories = get_token_categories(roget_df)
+        # doc_categories = re.findall(r"(rog\d{3} \w*)", token_categories)
 
-        for roget_cat in all_roget_categories:
-            output[roget_cat] = doc_categories.count(roget_cat)
+        # for roget_cat in all_roget_categories:
+        #     output[roget_cat] = doc_categories.count(roget_cat)
 
-        output["roget_n_cats"] = len(doc_categories)
+        # output["roget_n_cats"] = len(doc_categories)
 
     # save arc
     output["arc"] = arc

@@ -1,4 +1,3 @@
-&nbsp;  
 This web-app lets you uplaod a text, calculate a large number of text metrics and compare these to 
 a large corpus of canonical texts identified and analysed by Fabula-NET. 
 

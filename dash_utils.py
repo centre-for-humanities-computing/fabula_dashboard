@@ -187,6 +187,12 @@ def value_boxes_1234(value_name: str, column_name: str, df: pd.DataFrame, color:
             value_boxes_4(value_name, df, palette_1[2],{'size': 2, 'offset': 1}),
         ], style={"marginTop": 20, "marginBottom": 20})
 
+def value_boxes_12(value_name: str, column_name: str, df: pd.DataFrame, color: str) -> dbc.Col:
+    return dbc.Row([
+            dbc.Col([value_boxes_new(column_name, palette_1[2])], width = {'size': 2, 'offset': 0}, align="center"),
+            dbc.Col([value_boxes_new(df[df['Metric'] == value_name]['Value'].values[0].round(2), palette_1[2])], width = {'size': 2, 'offset': 4}, align="center"),
+        ], style={"marginTop": 20, "marginBottom": 20})
+
 def value_boxes_fig(value_name: str, column_name: str, df: pd.DataFrame, color: str) -> dbc.Col:
     return dbc.Row([
             dbc.Col([value_boxes_new(column_name, palette_1[2])], width = {'size': 2, 'offset': 0}, align="center"),
@@ -212,20 +218,34 @@ def metrics_explanation(metric_group: str, explanation: str, id_but: str, id_col
             ], style = {'backgroundColor': palette_1[1], 'borderColor': 'black', 'padding': '10px'}), id=id_col, is_open=False),
         ])
 
-def styl_func(style_df: pd.DataFrame, stylometrics_explanation_text: str) -> html.Div:
-    return html.Div([
-        html.H2(children='Stylometrics', className="fw-bold text-white"),
-        value_boxes_fig('word_count', 'Word Count', style_df, palette_1[2]),
-        value_boxes_fig('average_wordlen', 'Word Length', style_df, palette_1[2]),
-        value_boxes_fig('msttr', 'MSTTR', style_df, palette_1[2]),
-        value_boxes_fig('average_sentlen', 'Sentence Length', style_df, palette_1[2]),
-        value_boxes_fig('bzipr', 'bzipr', style_df, palette_1[2]),
-        value_boxes_fig('word_entropy', 'Word Entropy', style_df, palette_1[2]),
-        value_boxes_fig('bigram_entropy', 'Bigram Entropy', style_df, palette_1[2]),
-        metrics_explanation('Stylometrics', stylometrics_explanation_text, "collapse-button_1", "collapse_1")
-    ], style = {"backgroundColor": personal_palette[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"})
+def styl_func(style_df: pd.DataFrame, stylometrics_explanation_text: str, language: str) -> html.Div:
+    column_mapping = {
+        'word_count': 'Word Count',
+        'average_wordlen': 'Word Length',
+        'msttr': 'MSTTR',
+        'average_sentlen': 'Sentence Length',
+        'bzipr': 'bzipr',
+        'word_entropy': 'Word Entropy',
+        'bigram_entropy': 'Bigram Entropy'
+    }
 
-def sent_func(sent_df: pd.DataFrame, sentiment_explanation_text: str, arcs: list) -> html.Div:
+    content = [html.H2(children='Stylometrics', className="fw-bold text-white")]
+
+    if language == 'english':
+        for value_name in style_df['Metric']:
+            if value_name in column_mapping:
+                content.append(value_boxes_fig(value_name, column_mapping[value_name], style_df, palette_2[1]))
+    elif language == 'danish':
+        for value_name in style_df['Metric']:
+            if value_name in column_mapping:
+                content.append(value_boxes_12(value_name, column_mapping[value_name], style_df, palette_2[1]))
+    
+    content.append(metrics_explanation('Stylometrics', stylometrics_explanation_text, "collapse-button_1", "collapse_1"))
+
+    return html.Div(children = content, style = {"backgroundColor": personal_palette[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"})
+
+
+def sent_func(sent_df: pd.DataFrame, sentiment_explanation_text: str, arcs: list, sentiment_method: str, language: str) -> html.Div:
     column_mapping = {
         'mean_sentiment': 'Mean Sentiment',
         'std_sentiment': 'Std Sentiment',
@@ -235,12 +255,40 @@ def sent_func(sent_df: pd.DataFrame, sentiment_explanation_text: str, arcs: list
         'hurst': 'Hurst',
         'approximate_entropy_value': 'Approximate Entropy'
     }
+
+    if sentiment_method == 'syuzhet':
+        # remove 'hurst': 'Hurst' from column_mapping and add 'HURST_SYUZHET': 'Hurst'
+        column_mapping.pop('hurst')
+        column_mapping['HURST_SYUZHET'] = 'Hurst'
     
     content = [html.H2(children='Sentiment', className="fw-bold text-white")]
     
-    for value_name in sent_df['Metric']:
-        if value_name in column_mapping:
-            content.append(value_boxes_fig(value_name, column_mapping[value_name], sent_df, palette_2[1]))
+    if sentiment_method == 'afinn':
+        if language == 'english':
+            for value_name in sent_df['Metric']:
+                if value_name in column_mapping:
+                    content.append(value_boxes_12(value_name, column_mapping[value_name], sent_df, palette_2[1]))
+        elif language == 'danish':
+            for value_name in sent_df['Metric']:
+                if value_name in column_mapping:
+                    content.append(value_boxes_12(value_name, column_mapping[value_name], sent_df, palette_2[1]))
+
+    elif sentiment_method == 'vader':
+        for value_name in sent_df['Metric']:
+            if value_name in column_mapping:
+                content.append(value_boxes_fig(value_name, column_mapping[value_name], sent_df, palette_2[1]))
+
+    elif sentiment_method == 'syuzhet':
+        for value_name in sent_df['Metric']:
+            if value_name == 'HURST_SYUZHET':
+                content.append(value_boxes_fig(value_name, column_mapping[value_name], sent_df, palette_2[1]))
+            elif value_name in column_mapping:
+                content.append(value_boxes_12(value_name, column_mapping[value_name], sent_df, palette_2[1]))
+    
+    elif sentiment_method == 'avg_syuzhet_vader':
+        for value_name in sent_df['Metric']:
+            if value_name in column_mapping:
+                content.append(value_boxes_12(value_name, column_mapping[value_name], sent_df, palette_2[1]))
 
     if arcs is not None:
         content.append(value_boxes_arcs_fig('Progression of Sentiment Arcs', arcs))

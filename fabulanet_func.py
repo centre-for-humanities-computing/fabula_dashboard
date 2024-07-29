@@ -14,17 +14,17 @@ def parse_contents(contents, filename, language, sentiment, text, fileortext, pr
 
     if language is None:
         print(Exception)
-        return html.Div([dbc.Row([html.Hr(style = {'margin': '10px'}),dbc.Nav([dbc.NavLink("Home", href="/", active="exact"),], vertical=False, pills=True,),html.Hr(style = {'margin': '10px'}),]),]), None, None
+        return html.Div([dbc.Row([html.Hr(style = {'margin': '10px'}),dbc.Nav([dbc.NavLink("Home", href="/", active="exact"),dbc.NavLink("More Info", href="/about", active="exact")], vertical=False, pills=True,),html.Hr(style = {'margin': '10px'}),]),]), None, None
     
     if sentiment is None:
         print(Exception)
-        return html.Div([dbc.Row([html.Hr(style = {'margin': '10px'}),dbc.Nav([dbc.NavLink("Home", href="/", active="exact"),], vertical=False, pills=True,),html.Hr(style = {'margin': '10px'}),]),]), None, None
+        return html.Div([dbc.Row([html.Hr(style = {'margin': '10px'}),dbc.Nav([dbc.NavLink("Home", href="/", active="exact"),dbc.NavLink("More Info", href="/about", active="exact")], vertical=False, pills=True,),html.Hr(style = {'margin': '10px'}),]),]), None, None
 
     ### removing syuzhet for render deployment
-    if sentiment == 'syuzhet':
-        sentiment = 'afinn'
-    if sentiment == 'avg_syuzhet_vader':
-        sentiment = 'afinn'
+    # if sentiment == 'syuzhet':
+    #     sentiment = 'afinn'
+    # if sentiment == 'avg_syuzhet_vader':
+    #     sentiment = 'afinn'
     ###
 
     if fileortext == 'file':
@@ -60,27 +60,27 @@ def parse_contents(contents, filename, language, sentiment, text, fileortext, pr
         full_string = text
 
     dict_0 = compute_metrics(full_string, language, sentiment)
-    print("Done with computing metrics")
+    #print("Done with computing metrics")
 
     # compute metrics is producing lists in its dict, and don't know what to do with them
     # so I'm just going to take the mean of all the lists and put them in the dict
-    if language == 'english':
-        if len(dict_0['concreteness']) > 0:
-            dict_0['concreteness_mean'] = mean([i[0] for i in dict_0['concreteness']])
-        if len(dict_0['concreteness']) > 1:
-            dict_0['concreteness_sd'] = stdev([i[0] for i in dict_0['concreteness']])
-        if len(dict_0['valence']) > 0:
-            dict_0['valence_mean'] = mean([float(i[0]) for i in dict_0['valence']])
-        if len(dict_0['valence']) > 1:
-            dict_0['valence_sd'] = stdev([float(i[0]) for i in dict_0['valence']])
-        if len(dict_0['arousal']) > 0:
-            dict_0['arousal_mean'] = mean([float(i[0]) for i in dict_0['arousal']])
-        if len(dict_0['arousal']) > 1:
-            dict_0['arousal_sd'] = stdev([float(i[0]) for i in dict_0['arousal']])
-        if len(dict_0['dominance']) > 0:
-            dict_0['dominance_mean'] = mean([float(i[0][:-3]) for i in dict_0['dominance']])
-        if len(dict_0['dominance']) > 1:
-            dict_0['dominance_sd'] = stdev([float(i[0][:-3]) for i in dict_0['dominance']])
+    # if language == 'english':
+    #     if len(dict_0['concreteness']) > 0:
+    #         dict_0['concreteness_mean'] = mean([i[0] for i in dict_0['concreteness']])
+    #     if len(dict_0['concreteness']) > 1:
+    #         dict_0['concreteness_sd'] = stdev([i[0] for i in dict_0['concreteness']])
+    #     if len(dict_0['valence']) > 0:
+    #         dict_0['valence_mean'] = mean([float(i[0]) for i in dict_0['valence']])
+    #     if len(dict_0['valence']) > 1:
+    #         dict_0['valence_sd'] = stdev([float(i[0]) for i in dict_0['valence']])
+    #     if len(dict_0['arousal']) > 0:
+    #         dict_0['arousal_mean'] = mean([float(i[0]) for i in dict_0['arousal']])
+    #     if len(dict_0['arousal']) > 1:
+    #         dict_0['arousal_sd'] = stdev([float(i[0]) for i in dict_0['arousal']])
+    #     if len(dict_0['dominance']) > 0:
+    #         dict_0['dominance_mean'] = mean([float(i[0][:-3]) for i in dict_0['dominance']])
+    #     if len(dict_0['dominance']) > 1:
+    #         dict_0['dominance_sd'] = stdev([float(i[0][:-3]) for i in dict_0['dominance']])
     
     if 'arc' in dict_0:
         if len(dict_0['arc']) > 0:
@@ -132,8 +132,13 @@ def parse_contents(contents, filename, language, sentiment, text, fileortext, pr
     'flesch_ease',
     'smog',
     'ari',
-    'dale_chall_new'
-]
+    'dale_chall_new',
+    ]
+
+    if sentiment == 'syuzhet':
+        # remove hurst from columns_all
+        columns_all.remove('hurst')
+        columns_all.append('HURST_SYUZHET')
 
     columns_all_2 = [
     'word_count',
@@ -156,24 +161,39 @@ def parse_contents(contents, filename, language, sentiment, text, fileortext, pr
     'flesch_ease',
     'smog',
     'ari',
+    'HURST_SYUZHET',
     'dale_chall_new',
     'roget_n_tokens',
     'roget_n_tokens_filtered',
     'roget_n_cats'
 ]   
 
-    column_all_row = pd.DataFrame([columns_all_2], columns=columns_all_2)
-    column_all_row = column_all_row.T
-    mean_df_columns_all = mean_df[columns_all].T
-    mean_df_columns_all = mean_df_columns_all[proxy]
-    df = df.T
-    df.columns = ['Value']
-    concat_df = pd.concat([column_all_row, df, mean_df_columns_all], axis = 1)
-    old_column_name_0 = concat_df.columns[0]  # Get the old column name using its position
-    concat_df = concat_df.rename(columns={old_column_name_0: 'Metric'})
+    if proxy != None:
+        column_all_row = pd.DataFrame([columns_all_2], columns=columns_all_2)
+        column_all_row = column_all_row.T
+        mean_df_columns_all = mean_df[columns_all].T
+        mean_df_columns_all = mean_df_columns_all[proxy]
+        df = df.T
+        df.columns = ['Value']
+        concat_df = pd.concat([column_all_row, df, mean_df_columns_all], axis = 1)
+        old_column_name_0 = concat_df.columns[0]  # Get the old column name using its position
+        concat_df = concat_df.rename(columns={old_column_name_0: 'Metric'})
 
-    # remove rows that have NaN in the Value column
-    concat_df = concat_df.dropna(subset=['Value'])
+        # remove rows that have NaN in the Value column
+        concat_df = concat_df.dropna(subset=['Value'])
+    
+    else:
+        column_all_row = pd.DataFrame([columns_all], columns=columns_all)
+        column_all_row = column_all_row.T
+        #mean_df_columns_all = mean_df[columns_all].T
+        df = df.T
+        df.columns = ['Value']
+        concat_df = pd.concat([column_all_row, df], axis = 1)
+        old_column_name_0 = concat_df.columns[0]
+        concat_df = concat_df.rename(columns={old_column_name_0: 'Metric'})
+
+        # remove rows that have NaN in the Value column
+        concat_df = concat_df.dropna(subset=['Value'])
 
     if language == 'english':
          navbar = html.Div([
@@ -185,7 +205,7 @@ def parse_contents(contents, filename, language, sentiment, text, fileortext, pr
                         dbc.NavLink("Sentiment", href="/sent", active="exact"),
                         dbc.NavLink("Readability", href="/read", active="exact"),
                         #dbc.NavLink("Roget", href="/roget", active="exact"),
-                        dbc.NavLink("About", href="/about", active="exact"),
+                        dbc.NavLink("More Info", href="/about", active="exact"),
                         ], vertical=False, pills=True,),
                     html.Hr(style = {'margin': '10px'}),  # horizontal line
                     ]),
@@ -199,6 +219,7 @@ def parse_contents(contents, filename, language, sentiment, text, fileortext, pr
                         dbc.NavLink("Home", href="/", active="exact"),
                         dbc.NavLink("Stylometrics", href="/styl", active="exact"),
                         dbc.NavLink("Sentiment", href="/sent", active="exact"),
+                        dbc.NavLink("More Info", href="/about", active="exact"),
                         ], vertical=False, pills=True,),
                     html.Hr(style = {'margin': '10px'}),  # horizontal line
                     ]),
