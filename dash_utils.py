@@ -48,7 +48,7 @@ def create_fig(metric, metric_format, title_1, title_2):
 from scipy.stats import gaussian_kde
 import numpy as np
 
-def distribution_fig(metric, df_result):
+def distribution_fig(metric, df_result, x_plot_range = None):
     # read csv
     df = pd.read_csv(os.path.join('data', 'df_subset.csv'))
 
@@ -87,6 +87,15 @@ def distribution_fig(metric, df_result):
         yaxis=dict(showgrid=False),   # Remove y-axis grid
         font=dict(color='#000000')  # Make all other text black
     )
+
+    if x_plot_range is not None:
+        if df_result[df_result['Metric'] == metric]['Value'].values[0] > x_plot_range[0]:
+            if df_result[df_result['Metric'] == metric]['Value'].values[0] < x_plot_range[1]:
+                fig.update_layout(xaxis_range=x_plot_range)
+            else:
+                fig.update_layout(xaxis_range=[x_plot_range[0], df_result[df_result['Metric'] == metric]['Value'].values[0]])
+        elif df_result[df_result['Metric'] == metric]['Value'].values[0] < x_plot_range[1]:
+            fig.update_layout(xaxis_range=[df_result[df_result['Metric'] == metric]['Value'].values[0], x_plot_range[1]])
 
     return dcc.Graph(id="figure", figure=fig)
 
@@ -193,10 +202,10 @@ def value_boxes_12(value_name: str, column_name: str, df: pd.DataFrame, color: s
             dbc.Col([value_boxes_new(df[df['Metric'] == value_name]['Value'].values[0].round(2), palette_1[2])], width = {'size': 2, 'offset': 4}, align="center"),
         ], style={"marginTop": 20, "marginBottom": 20})
 
-def value_boxes_fig(value_name: str, column_name: str, df: pd.DataFrame, color: str) -> dbc.Col:
+def value_boxes_fig(value_name: str, column_name: str, df: pd.DataFrame, color: str, x_plot_range = None) -> dbc.Col:
     return dbc.Row([
             dbc.Col([value_boxes_new(column_name, palette_1[2])], width = {'size': 2, 'offset': 0}, align="center"),
-            dbc.Col([distribution_fig(value_name, df)], width = {'size': 9, 'offset': 1}),
+            dbc.Col([distribution_fig(value_name, df, x_plot_range=x_plot_range)], width = {'size': 9, 'offset': 1}),
         ], style={"marginTop": 0, "marginBottom": 0})
 
 def value_boxes_arcs_fig(name: str, arcs: list[float]) -> dbc.Col:
@@ -234,7 +243,12 @@ def styl_func(style_df: pd.DataFrame, stylometrics_explanation_text: str, langua
     if language == 'english':
         for value_name in style_df['Metric']:
             if value_name in column_mapping:
-                content.append(value_boxes_fig(value_name, column_mapping[value_name], style_df, palette_2[1]))
+                if value_name == 'average_sentlen':
+                    content.append(value_boxes_fig(value_name, column_mapping[value_name], style_df, palette_2[1], x_plot_range=[0, 300]))
+                elif value_name == 'bigram_entropy':
+                    content.append(value_boxes_fig(value_name, column_mapping[value_name], style_df, palette_2[1], x_plot_range=[10, 17]))
+                else:
+                    content.append(value_boxes_fig(value_name, column_mapping[value_name], style_df, palette_2[1]))
     elif language == 'danish':
         for value_name in style_df['Metric']:
             if value_name in column_mapping:
@@ -298,15 +312,30 @@ def sent_func(sent_df: pd.DataFrame, sentiment_explanation_text: str, arcs: list
     return html.Div(content, style={"backgroundColor": palette_2[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"})
 
 def read_func(read_df: pd.DataFrame, readability_explanation_text: str) -> html.Div:
-    return html.Div([
-        html.H2(children='Readability', className="fw-bold text-white"),
-        value_boxes_fig('flesch_grade', 'Flesch Grade', read_df, palette_4[1]),
-        value_boxes_fig('flesch_ease', 'Flesch Ease', read_df, palette_4[1]),
-        value_boxes_fig('smog', 'Smog', read_df, palette_4[1]),
-        value_boxes_fig('ari', 'Ari', read_df, palette_4[1]),
-        value_boxes_fig('dale_chall_new', 'Dale Chall New', read_df, palette_4[1]),
-        metrics_explanation('Readability', readability_explanation_text, "collapse-button_4", "collapse_4"),
-    ], style = {"backgroundColor": palette_4[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"})
+    column_mapping = {
+        'flesch_grade': 'Flesch Grade',
+        'flesch_ease': 'Flesch Ease',
+        'smog': 'Smog',
+        'ari': 'Ari',
+        'dale_chall_new': 'Dale Chall New'
+    }
+    content = [html.H2(children='Readability', className="fw-bold text-white")]
+    
+    for value_name in read_df['Metric']:
+        if value_name == 'flesch_grade':
+            content.append(value_boxes_fig(value_name, column_mapping[value_name], read_df, palette_2[1], x_plot_range=[0, 20]))
+        elif value_name == 'flesch_ease':
+            content.append(value_boxes_fig(value_name, column_mapping[value_name], read_df, palette_2[1], x_plot_range=[0, 100]))
+        elif value_name == 'ari':
+            content.append(value_boxes_fig(value_name, column_mapping[value_name], read_df, palette_2[1], x_plot_range=[0, 25]))
+        elif value_name == 'dale_chall_new':
+            content.append(value_boxes_fig(value_name, column_mapping[value_name], read_df, palette_2[1], x_plot_range=[4, 9]))
+        else:
+            content.append(value_boxes_fig(value_name, column_mapping[value_name], read_df, palette_2[1]))
+    
+    content.append(metrics_explanation('Readability', readability_explanation_text, "collapse-button_4", "collapse_4"))
+    
+    return html.Div(content, style={"backgroundColor": palette_4[0], "padding": "10px", "borderRadius": "15px", "margin": "10px"})
 
 def roget_func(roget_df: pd.DataFrame, roget_explanation_text: str) -> html.Div:
     return html.Div([

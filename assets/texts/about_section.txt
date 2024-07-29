@@ -1,3 +1,4 @@
+&nbsp;
 This web-app can process text and calculate a large number of metrics. The metrics will then be visualised as points on a distribution.
 The distributions are the result of the project Fabula-NET having calculated the exact same metrics on a large corpus of books,
 amounting to around 10,000 books. Visualising the metrics as points on a distribution makes it easy to compare your text to the corpus
