@@ -71,18 +71,18 @@ for value, label in zip(value_names, label_names):
     group_options.append({"value": value, "label": label})
 
 sidebar = html.Div([
-    html.Br(),
+    #html.Br(),
     html.H1("Settings", className="text-center fw-bold fs-2"),
-    html.Br(),
-    html.H3(children='Choose Language', className="fw-bold"),
+    #html.Br(),
+    html.H3(children='Choose Language', className="fw-bold", style={'margin-top': '50px'}),
     dcc.Dropdown(options=[{'value': 'english', 'label': 'English'}, {'value': 'danish', 'label': 'Danish'}], id='lang-dropdown', placeholder="Select a language", searchable = False, style = {'color': 'black'}),
-    html.Br(),
+    #html.Br(),
     html.H3(children='Choose Sentiment Analysis', style={'margin-top': '50px'}, className="fw-bold"),
     dcc.Dropdown(id='sent-dropdown', placeholder="Select sentiment analysis method", searchable = False, style = {'color': 'black'}),
-    html.Br(),
+    #html.Br(),
     html.H3(children='Choose Comparison Group', style={'margin-top': '50px'}, className="fw-bold"),
     dcc.Dropdown(id='group-dropdown', placeholder="Select a Group", searchable = False, style = {'color': 'black'}, multi = True),
-    html.Br(),
+    #html.Br(),
     html.H3(children='Upload File', style={'margin-top': '50px'}, className="fw-bold"),
     dcc.Upload(id='upload-data', children=html.Div(['Drag and Drop or ', html.A('Select Files (.txt or .docx)')]), style={'width': '100%',
                                                                                                           'height': '120px', 
@@ -93,10 +93,10 @@ sidebar = html.Div([
                                                                                                           'textAlign': 'center',
                                                                                                           'margin': '10px 20px 0px 0px'},multiple=False),
     html.Div(id='file-upload-status'),
-    html.Br(),
+    #html.Br(),
     html.H3(children='Write Text', style={'margin-top': '50px'}, className="fw-bold"),
     dcc.Textarea(id='textarea-example',value=None,style={'width': '100%', 
-                                                         'height': '120px', 
+                                                         'height': '250px', 
                                                          'textAlign': 'left',
                                                          'margin': '0px 20px 10px 0px'}),
     html.Button('Submit', id='submit-val', n_clicks=0, className = 'button', style = {}),
@@ -393,5 +393,5 @@ def render_page_content(pathname, data, n_clicks, contents, text, language, sent
             html.P(dcc.Markdown(about_section_text), style = {'fontSize': 20, 'textAlign': 'left', 'margin': '10px 200px 10px 200px'}),])
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
     # app.run(debug=False)
